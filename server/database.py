@@ -261,6 +261,8 @@ CREATE TABLE IF NOT EXISTS escrows (
     amount REAL NOT NULL,
     commission REAL NOT NULL,
     status TEXT DEFAULT 'held',
+    simulated BOOLEAN DEFAULT TRUE,
+    tx_hash TEXT,
     created_at TEXT NOT NULL,
     released_at TEXT,
     FOREIGN KEY (auction_id) REFERENCES auctions(id)
@@ -305,4 +307,23 @@ async def init_db():
     db = await get_db()
     await db.executescript(CREATE_TABLES_SQL)
     await db.commit()
+    # Migrate existing DB: add columns if they don't exist (SQLite only)
+    await _migrate(db)
     logger.info("Database tables initialized")
+
+
+async def _migrate(db):
+    """Add new columns to existing tables without breaking older DBs."""
+    migrations = [
+        # escrows: blockchain tracking columns
+        "ALTER TABLE escrows ADD COLUMN simulated BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE escrows ADD COLUMN tx_hash TEXT",
+        # offers: optional on-chain wallet
+        "ALTER TABLE offers ADD COLUMN wallet_address TEXT",
+    ]
+    for stmt in migrations:
+        try:
+            await db.execute(stmt, ())
+            await db.commit()
+        except Exception:
+            pass  # column already exists — ignore

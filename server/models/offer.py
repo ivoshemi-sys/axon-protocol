@@ -9,6 +9,7 @@ class OfferCreate(BaseModel):
     capabilities: list[str]
     price_per_unit: float
     currency: str = "USDC"
+    wallet_address: str | None = None  # On-chain Base wallet for receiving USDC payments
 
 
 class Offer(OfferCreate):

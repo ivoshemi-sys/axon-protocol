@@ -21,3 +21,10 @@ PROTOCOL_VERSION = "0.1.0"
 LOG_DIR = os.getenv("LOG_DIR", os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs"))
 
 USE_POSTGRES = bool(DATABASE_URL and DATABASE_URL.startswith("postgresql"))
+
+# ── Blockchain / Base mainnet ────────────────────────────────────────────────
+BASE_RPC_URL              = os.getenv("BASE_RPC_URL", "")
+PROTOCOL_PRIVATE_KEY      = os.getenv("PROTOCOL_PRIVATE_KEY", "")
+ESCROW_CONTRACT_ADDRESS   = os.getenv("ESCROW_CONTRACT_ADDRESS", "")
+# Derived flag: True when all three blockchain vars are present
+BLOCKCHAIN_ENABLED = bool(BASE_RPC_URL and PROTOCOL_PRIVATE_KEY and ESCROW_CONTRACT_ADDRESS)

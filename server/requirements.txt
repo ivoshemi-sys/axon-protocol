@@ -9,3 +9,6 @@ httpx==0.27.2
 python-dotenv==1.0.1
 cryptography==43.0.1
 rich==13.8.1
+# Blockchain
+web3==6.20.3
+py-solc-x==2.0.4

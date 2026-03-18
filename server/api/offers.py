@@ -33,9 +33,9 @@ async def create_offer(offer: OfferCreate):
     now = _now()
     capabilities_json = json.dumps(offer.capabilities)
     await db.execute(
-        """INSERT INTO offers (id, agent_id, agent_name, capabilities, price_per_unit, currency, status, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        (offer_id, offer.agent_id, offer.agent_name, capabilities_json, offer.price_per_unit, offer.currency, "active", now, now),
+        """INSERT INTO offers (id, agent_id, agent_name, capabilities, price_per_unit, currency, status, wallet_address, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (offer_id, offer.agent_id, offer.agent_name, capabilities_json, offer.price_per_unit, offer.currency, "active", offer.wallet_address, now, now),
     )
     await db.commit()
     return _response(
@@ -46,6 +46,7 @@ async def create_offer(offer: OfferCreate):
             capabilities=offer.capabilities,
             price_per_unit=offer.price_per_unit,
             currency=offer.currency,
+            wallet_address=offer.wallet_address,
             status="active",
             created_at=now,
             updated_at=now,
