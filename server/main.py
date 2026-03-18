@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -7,7 +8,7 @@ from core.logger import setup_logging
 from database import init_db, get_db, USE_POSTGRES
 from core.openclaw import openclaw_client
 from core.rate_limiter import rate_limiter
-from config import BLOCKCHAIN_ENABLED
+from config import BLOCKCHAIN_ENABLED, PROTOCOL_VERSION, LOG_DIR, DISPUTE_WINDOW_MINUTES
 from api.offers import router as offers_router
 from api.auctions import router as auctions_router
 from api.escrow import router as escrow_router
@@ -15,28 +16,51 @@ from api.verify import router as verify_router
 from api.ledger import router as ledger_router
 from api.aipi import router as aipi_router
 from api.status import router as status_router
-from config import PROTOCOL_VERSION, LOG_DIR
+from api.disputes import router as disputes_router
 
 logger = setup_logging()
+
+_auto_release_task = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global _auto_release_task
+
     logger.info("AXON Protocol starting up...")
     await init_db()
     logger.info("Database initialized")
+
     await openclaw_client.connect()
-    # Init blockchain client (non-blocking — falls back to simulated if not configured)
+
+    # Blockchain client (graceful fallback)
     try:
         from blockchain.escrow_client import escrow_client
         await escrow_client.init()
     except ImportError:
         logger.warning("web3 not installed — blockchain escrow disabled")
-    db_backend = "PostgreSQL" if USE_POSTGRES else "SQLite"
-    chain_mode = "Base mainnet" if BLOCKCHAIN_ENABLED else "simulated"
-    logger.info(f"DB: {db_backend} | OpenClaw: {openclaw_client.connected} | Escrow: {chain_mode} | Logs: {LOG_DIR}")
+
+    # Auto-release background job
+    from core.auto_release import auto_release_loop
+    _auto_release_task = asyncio.create_task(auto_release_loop())
+
+    db_backend  = "PostgreSQL" if USE_POSTGRES else "SQLite"
+    chain_mode  = "Base mainnet" if BLOCKCHAIN_ENABLED else "simulated"
+    logger.info(
+        f"DB: {db_backend} | OpenClaw: {openclaw_client.connected} | "
+        f"Escrow: {chain_mode} | DisputeWindow: {DISPUTE_WINDOW_MINUTES}m | Logs: {LOG_DIR}"
+    )
     logger.info("🚀 AXON Protocol server running")
+
     yield
+
+    # Graceful shutdown
+    if _auto_release_task:
+        _auto_release_task.cancel()
+        try:
+            await _auto_release_task
+        except asyncio.CancelledError:
+            pass
     logger.info("🛑 AXON Protocol server stopped")
 
 
@@ -55,13 +79,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(offers_router, prefix="/api/v1")
+app.include_router(offers_router,   prefix="/api/v1")
 app.include_router(auctions_router, prefix="/api/v1")
-app.include_router(escrow_router, prefix="/api/v1")
-app.include_router(verify_router, prefix="/api/v1")
-app.include_router(ledger_router, prefix="/api/v1")
-app.include_router(aipi_router, prefix="/api/v1")
-app.include_router(status_router, prefix="/api/v1")
+app.include_router(escrow_router,   prefix="/api/v1")
+app.include_router(verify_router,   prefix="/api/v1")
+app.include_router(ledger_router,   prefix="/api/v1")
+app.include_router(aipi_router,     prefix="/api/v1")
+app.include_router(status_router,   prefix="/api/v1")
+app.include_router(disputes_router, prefix="/api/v1")
 
 
 @app.get("/")
@@ -69,19 +94,20 @@ async def root():
     from datetime import datetime, timezone
     escrow_mode = "base_mainnet" if BLOCKCHAIN_ENABLED else "simulated"
     return {
-        "protocol":    "AXON",
-        "version":     PROTOCOL_VERSION,
-        "status":      "operational",
-        "phase":       2 if BLOCKCHAIN_ENABLED else 1,
-        "escrow":      escrow_mode,
-        "db_backend":  "postgresql" if USE_POSTGRES else "sqlite",
-        "timestamp":   datetime.now(timezone.utc).isoformat(),
+        "protocol":              "AXON",
+        "version":               PROTOCOL_VERSION,
+        "status":                "operational",
+        "phase":                 2 if BLOCKCHAIN_ENABLED else 1,
+        "escrow":                escrow_mode,
+        "dispute_window_minutes": DISPUTE_WINDOW_MINUTES,
+        "db_backend":            "postgresql" if USE_POSTGRES else "sqlite",
+        "timestamp":             datetime.now(timezone.utc).isoformat(),
     }
 
 
 @app.get("/health")
 async def health():
-    db = await get_db()
+    db    = await get_db()
     db_ok = True
     try:
         async with db.execute("SELECT 1 as ok") as cur:
@@ -105,8 +131,22 @@ async def health():
         row = await cur.fetchone()
     total_tx = row["total"] if row else 0
 
-    # Blockchain wallet info (if enabled)
-    blockchain_info = {"enabled": BLOCKCHAIN_ENABLED, "escrow_mode": "base_mainnet" if BLOCKCHAIN_ENABLED else "simulated"}
+    async with db.execute(
+        "SELECT COUNT(*) as total FROM disputes WHERE status = 'open'"
+    ) as cur:
+        row = await cur.fetchone()
+    open_disputes = row["total"] if row else 0
+
+    async with db.execute(
+        "SELECT COUNT(*) as total FROM escrows WHERE status = 'pending_release'"
+    ) as cur:
+        row = await cur.fetchone()
+    pending_release = row["total"] if row else 0
+
+    blockchain_info = {
+        "enabled":     BLOCKCHAIN_ENABLED,
+        "escrow_mode": "base_mainnet" if BLOCKCHAIN_ENABLED else "simulated",
+    }
     if BLOCKCHAIN_ENABLED:
         try:
             from blockchain.escrow_client import escrow_client
@@ -124,6 +164,8 @@ async def health():
         "db":          "ok" if db_ok else "error",
         "db_backend":  "postgresql" if USE_POSTGRES else "sqlite",
         "blockchain":  blockchain_info,
+        "disputes":    {"open": open_disputes, "window_minutes": DISPUTE_WINDOW_MINUTES},
+        "escrows":     {"pending_release": pending_release},
         "rate_limiter": rate_limiter.get_stats(),
         "protocol_revenue": {
             "total_commissions_simulated": total_commissions,

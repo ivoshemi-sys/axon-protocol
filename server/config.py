@@ -28,3 +28,13 @@ PROTOCOL_PRIVATE_KEY      = os.getenv("PROTOCOL_PRIVATE_KEY", "")
 ESCROW_CONTRACT_ADDRESS   = os.getenv("ESCROW_CONTRACT_ADDRESS", "")
 # Derived flag: True when all three blockchain vars are present
 BLOCKCHAIN_ENABLED = bool(BASE_RPC_URL and PROTOCOL_PRIVATE_KEY and ESCROW_CONTRACT_ADDRESS)
+
+# ── Dispute system ───────────────────────────────────────────────────────────
+DISPUTE_WINDOW_MINUTES = int(os.getenv("DISPUTE_WINDOW_MINUTES", "10"))
+DISPUTE_FEE_RATE       = float(os.getenv("DISPUTE_FEE_RATE", "0.10"))   # 10% of tx value
+AUTO_RELEASE_INTERVAL  = int(os.getenv("AUTO_RELEASE_INTERVAL", "60"))  # seconds between checks
+
+# ── Anthropic API (used by Claude arbiter) ───────────────────────────────────
+ANTHROPIC_API_KEY    = os.getenv("ANTHROPIC_API_KEY", "")
+ARBITER_MODEL        = os.getenv("ARBITER_MODEL", "claude-opus-4-6")
+ARBITER_MAX_TOKENS   = int(os.getenv("ARBITER_MAX_TOKENS", "1024"))

@@ -12,3 +12,5 @@ rich==13.8.1
 # Blockchain
 web3==6.20.3
 py-solc-x==2.0.4
+# Arbiter
+anthropic>=0.40.0

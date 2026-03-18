@@ -299,6 +299,20 @@ CREATE TABLE IF NOT EXISTS protocol_revenue (
     period TEXT,
     simulated BOOLEAN DEFAULT TRUE,
     created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS disputes (
+    id TEXT PRIMARY KEY,
+    auction_id TEXT NOT NULL,
+    opened_by TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    status TEXT DEFAULT 'open',
+    fee_amount REAL NOT NULL,
+    arbiter_verdict TEXT,
+    arbiter_cost_usdc REAL,
+    created_at TEXT NOT NULL,
+    resolved_at TEXT,
+    FOREIGN KEY (auction_id) REFERENCES auctions(id)
 )
 """
 
@@ -320,6 +334,8 @@ async def _migrate(db):
         "ALTER TABLE escrows ADD COLUMN tx_hash TEXT",
         # offers: optional on-chain wallet
         "ALTER TABLE offers ADD COLUMN wallet_address TEXT",
+        # auctions: 'delivered' status support (no column change needed, status is TEXT)
+        # disputes table — created by CREATE TABLE IF NOT EXISTS above, no ALTER needed
     ]
     for stmt in migrations:
         try:
