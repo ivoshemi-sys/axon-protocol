@@ -436,6 +436,16 @@ CREATE TABLE IF NOT EXISTS spot_requests (
     created_at TEXT NOT NULL,
     completed_at TEXT,
     FOREIGN KEY (listing_id) REFERENCES capacity_listings(id)
+);
+
+CREATE TABLE IF NOT EXISTS a2a_tasks (
+    id TEXT PRIMARY KEY,               -- a2a_task_xxx
+    session_id TEXT NOT NULL,
+    input_text TEXT NOT NULL,
+    skill_used TEXT,
+    result_json TEXT,
+    status TEXT DEFAULT 'pending',     -- pending, completed, cancelled, failed
+    created_at TEXT NOT NULL
 )
 """
 

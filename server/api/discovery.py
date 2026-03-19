@@ -219,6 +219,19 @@ async def agent_card(request: Request):
     return JSONResponse(card, headers={"Access-Control-Allow-Origin": "*"})
 
 
+@router.get("/.well-known/a2a.json", include_in_schema=False)
+async def a2a_manifest(request: Request):
+    """
+    Google A2A (Agent2Agent) 2025 agent manifest.
+    Discoverable by 60+ A2A partner platforms: PayPal, Coinbase, Mastercard, Salesforce, SAP, etc.
+    https://google.github.io/A2A/
+    """
+    from api.a2a import _build_a2a_manifest
+    base = _base_url(request)
+    manifest = _build_a2a_manifest(base)
+    return JSONResponse(manifest, headers={"Access-Control-Allow-Origin": "*"})
+
+
 @router.get("/.well-known/mcp.json", include_in_schema=False)
 async def mcp_config(request: Request):
     """

@@ -357,3 +357,138 @@ def create_monitor(
         daily_budget_usd=daily_budget_usd,
         low_threshold=low_threshold,
     )
+
+
+# ── NemoClaw / NVIDIA NIM wrapper ─────────────────────────────────────────────
+
+class NeMoTokenMonitor(TokenMonitor):
+    """
+    Extended TokenMonitor for NVIDIA NeMo / NIM environments.
+
+    Adds NIM-specific credit tracking and OpenClaw swarm notifications
+    when the token budget is low and delegation is triggered.
+
+    Usage:
+        monitor = NeMoTokenMonitor(
+            agent_id="nemo_agent_1",
+            daily_token_budget=500_000,  # NIM token budget
+            openclaw_ws="ws://127.0.0.1:18789",
+        )
+        monitor.wrap_nim_client(nim_openai_client)
+
+        # Before heavy NIM inference:
+        if monitor.should_delegate_nim():
+            return monitor.delegate_to_axon_sync(task, "summarization")
+    """
+
+    def __init__(
+        self,
+        agent_id:            str,
+        daily_token_budget:   int   = 500_000,
+        low_threshold_pct:    float = 0.10,
+        axon_base_url:        str   = AXON_BASE_URL,
+        max_delegate_price:   float = 0.10,
+        openclaw_ws:          str   = "ws://127.0.0.1:18789",
+        # USD cost approximation for NIM (per million tokens)
+        nim_cost_per_million: float = 2.0,
+    ):
+        # Convert NIM token budget to approximate USD for parent class
+        approx_daily_usd = (daily_token_budget / 1_000_000) * nim_cost_per_million
+        super().__init__(
+            axon_base_url=axon_base_url,
+            agent_id=agent_id,
+            low_threshold=low_threshold_pct,
+            daily_budget_usd=approx_daily_usd,
+            max_delegate_price=max_delegate_price,
+        )
+        self.daily_token_budget  = daily_token_budget
+        self.openclaw_ws         = openclaw_ws
+        self._nim_tokens_used    = 0
+
+    def wrap_nim_client(self, client) -> None:
+        """
+        Wrap a NIM client (OpenAI-compatible) for token tracking and AXON fallback.
+        NIM uses the OpenAI API format so we can reuse wrap_openai().
+        """
+        self.wrap_openai(client)
+        logger.info(f"[NeMo TokenMonitor] NIM client wrapped for {self.agent_id}")
+
+    def should_delegate_nim(self) -> bool:
+        """Return True if NIM token budget is running low and AXON delegation is warranted."""
+        return self.get_stats()["recommend_delegation"]
+
+    def delegate_to_axon_sync(self, task: str, capability: str) -> dict:
+        """
+        Synchronously delegate a task to AXON when NIM token budget is low.
+        Also notifies the OpenClaw swarm about the delegation.
+        """
+        result = _delegate_sync(task, capability, self.agent_id,
+                                self.max_delegate_price, self.axon_base_url)
+        # Fire-and-forget OpenClaw notification (non-blocking)
+        try:
+            import asyncio
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(_notify_openclaw(self.openclaw_ws, {
+                    "event":         "axon_nim_delegation",
+                    "agent_id":      self.agent_id,
+                    "capability":    capability,
+                    "result":        result,
+                }))
+        except Exception:
+            pass
+        return result
+
+    def nim_stats(self) -> dict:
+        """Extended stats including NIM-specific token metrics."""
+        base = self.get_stats()
+        return {
+            **base,
+            "nim_tokens_used":   self._nim_tokens_used,
+            "nim_daily_budget":  self.daily_token_budget,
+            "nim_tokens_left":   max(0, self.daily_token_budget - self._nim_tokens_used),
+            "platform":          "nvidia-nim",
+        }
+
+
+def _delegate_sync(task: str, capability: str, agent_id: str,
+                   max_price: float, base_url: str) -> dict:
+    """Synchronous AXON delegation helper."""
+    with __import__("httpx").Client(timeout=15) as client:
+        resp = client.post(f"{base_url}/api/v1/spot/request", json={
+            "requester_id":     agent_id,
+            "capability":       capability,
+            "task_description": task,
+            "max_price_usdc":   max_price,
+            "urgency":          "high",
+        })
+        try:
+            return resp.json()
+        except Exception:
+            return {"error": resp.text}
+
+
+async def _notify_openclaw(ws_url: str, event: dict) -> None:
+    """Notify OpenClaw swarm about a delegation event."""
+    try:
+        import websockets
+        import json
+        async with websockets.connect(ws_url, open_timeout=2) as ws:
+            await ws.send(json.dumps(event))
+    except Exception:
+        pass
+
+
+def create_nemo_monitor(
+    agent_id:           str,
+    daily_token_budget: int   = 500_000,
+    axon_base_url:      str   = AXON_BASE_URL,
+    openclaw_ws:        str   = "ws://127.0.0.1:18789",
+) -> NeMoTokenMonitor:
+    """Create a NeMoTokenMonitor pre-configured for NVIDIA NIM environments."""
+    return NeMoTokenMonitor(
+        agent_id=agent_id,
+        daily_token_budget=daily_token_budget,
+        axon_base_url=axon_base_url,
+        openclaw_ws=openclaw_ws,
+    )
