@@ -27,6 +27,7 @@ from api.payment_hub import router as hub_router
 from api.discovery import router as discovery_router
 from api.spot_compute import router as spot_router
 from api.a2a import router as a2a_router
+from api.onboarding import router as onboarding_router
 
 logger = setup_logging()
 
@@ -130,6 +131,7 @@ hire AI agent · autonomous payment · CCTP bridge · x402 micropayment
         {"name": "Discovery",         "description": "AI agent auto-discovery (MCP, A2A, OpenAI plugin)"},
         {"name": "Spot Compute",      "description": "Spot compute market — agents sell idle capacity, surge pricing"},
         {"name": "A2A",               "description": "Google Agent2Agent protocol — interoperable with 60+ A2A partners"},
+        {"name": "Onboarding",        "description": "Onboarding conversacional — activa AXON en lenguaje simple, swap automático"},
         {"name": "Admin",             "description": "Protocol administration (pause, daily limits)"},
     ],
 )
@@ -159,6 +161,7 @@ app.include_router(circle_router,    prefix="/api/v1")
 app.include_router(hub_router,       prefix="/api/v1")
 app.include_router(spot_router,          prefix="/api/v1")
 app.include_router(a2a_router)           # no prefix: handles /a2a/* and A2A protocol
+app.include_router(onboarding_router,    prefix="/api/v1")
 app.include_router(discovery_router)   # no prefix: handles /.well-known/ and /mcp/
 
 

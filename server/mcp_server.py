@@ -33,6 +33,10 @@ Tools exposed:
   axon_find_spot_compute  — find spot agents to hire instantly (delegation, low tokens)
   axon_list_spot_capacity — sell idle capacity on spot market (earn passively)
   axon_spot_market        — real-time spot market overview with surge pricing
+  axon_onboarding_start   — conversational onboarding: detect state, guide activation
+  axon_onboarding_chat    — answer onboarding questions in simple language
+  axon_swap_quote         — quote token→USDC conversion via Uniswap V3
+  axon_create_wallet      — generate a new Base wallet for the user
 """
 
 import asyncio
@@ -321,6 +325,75 @@ TOOLS = [
             "properties": {},
         },
     },
+    {
+        "name": "axon_onboarding_start",
+        "description": (
+            "Start the AXON conversational onboarding flow. "
+            "Automatically detects the user's state (no wallet, has tokens, has USDC, registered) "
+            "and returns the right message in simple non-technical language. "
+            "Use this when a new user or agent wants to join AXON and doesn't know where to start. "
+            "The system acts as a financial advisor: 'I found a way to generate passive income for you.' "
+            "Supports all channels: terminal, telegram, web, mcp."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "wallet_address": {"type": "string", "description": "User's wallet address (optional)"},
+                "agent_id":       {"type": "string", "description": "Agent ID (optional)"},
+                "agent_name":     {"type": "string", "description": "Agent display name", "default": "Mi Agente"},
+                "channel":        {"type": "string", "enum": ["terminal", "telegram", "web", "mcp"], "default": "mcp"},
+            },
+        },
+    },
+    {
+        "name": "axon_onboarding_chat",
+        "description": (
+            "Answer onboarding questions in simple, non-technical language. "
+            "Responds to questions about: what is a wallet, what is USDC, how does staking work, "
+            "how much can I earn, how do I convert my tokens, how do I activate AXON. "
+            "Never uses technical jargon — explains everything as a friendly financial advisor."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "message":        {"type": "string", "description": "User's question or message"},
+                "wallet_address": {"type": "string", "description": "User's wallet (optional)"},
+                "channel":        {"type": "string", "default": "mcp"},
+            },
+            "required": ["message"],
+        },
+    },
+    {
+        "name": "axon_swap_quote",
+        "description": (
+            "Get a quote for converting tokens (ETH, WETH, cbETH, DAI) to USDC via Uniswap V3 on Base. "
+            "Shows how much USDC you'd receive, the conversion fee, and slippage. "
+            "Does NOT execute the swap — just shows the price. "
+            "Use before executing a swap to confirm the rate."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "wallet_address": {"type": "string", "description": "User's wallet address"},
+                "token_symbol":   {"type": "string", "description": "Token to convert: ETH, WETH, cbETH, DAI"},
+                "amount":         {"type": "number", "description": "Amount to convert (0 = full balance)"},
+            },
+            "required": ["wallet_address", "token_symbol"],
+        },
+    },
+    {
+        "name": "axon_create_wallet",
+        "description": (
+            "Generate a new Base mainnet wallet for a user who doesn't have one yet. "
+            "Returns address and private key. "
+            "IMPORTANT: The private key is shown once and never stored — user must save it. "
+            "Use when the onboarding flow detects the user has no wallet."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+        },
+    },
 ]
 
 
@@ -404,6 +477,31 @@ async def handle_tool_call(name: str, arguments: dict) -> str:
 
         elif name == "axon_spot_market":
             result = await call_axon("GET", "/api/v1/spot/market")
+
+        elif name == "axon_onboarding_start":
+            result = await call_axon("POST", "/api/v1/onboarding/start", {
+                "wallet_address": arguments.get("wallet_address"),
+                "agent_id":       arguments.get("agent_id"),
+                "agent_name":     arguments.get("agent_name", "Mi Agente"),
+                "channel":        arguments.get("channel", "mcp"),
+            })
+
+        elif name == "axon_onboarding_chat":
+            result = await call_axon("POST", "/api/v1/onboarding/chat", {
+                "message":        arguments.get("message", ""),
+                "wallet_address": arguments.get("wallet_address"),
+                "channel":        arguments.get("channel", "mcp"),
+            })
+
+        elif name == "axon_swap_quote":
+            result = await call_axon("POST", "/api/v1/onboarding/swap/quote", {
+                "wallet_address": arguments.get("wallet_address", ""),
+                "token_symbol":   arguments.get("token_symbol", "ETH"),
+                "amount":         arguments.get("amount", 0),
+            })
+
+        elif name == "axon_create_wallet":
+            result = await call_axon("POST", "/api/v1/onboarding/wallet/new", {})
 
         else:
             result = {"error": f"Unknown tool: {name}"}

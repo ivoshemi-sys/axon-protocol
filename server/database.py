@@ -446,6 +446,19 @@ CREATE TABLE IF NOT EXISTS a2a_tasks (
     result_json TEXT,
     status TEXT DEFAULT 'pending',     -- pending, completed, cancelled, failed
     created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS onboarding_sessions (
+    id TEXT PRIMARY KEY,               -- axon_ob_xxx
+    agent_id TEXT,
+    wallet_address TEXT,
+    state TEXT NOT NULL,               -- no_wallet, wallet_no_funds, has_tokens, has_usdc, registered, earning
+    channel TEXT DEFAULT 'terminal',   -- terminal, telegram, web, mcp
+    swap_tx_hash TEXT,
+    usdc_after_swap REAL,
+    offer_id TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 )
 """
 
