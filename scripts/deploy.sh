@@ -79,7 +79,7 @@ cd $DEPLOY_DIR
 
 echo ""
 echo "── 3/6  Python venv + dependencies ──────────────────"
-python3 -m venv venv --upgrade-deps --quiet
+python3 -m venv venv --upgrade-deps
 venv/bin/pip install -r server/requirements.txt -q --disable-pip-version-check
 echo "  dependencies ✅"
 
