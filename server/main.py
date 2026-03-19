@@ -24,6 +24,7 @@ from api.cctp import router as cctp_router
 from api.coinbase_commerce import router as coinbase_router
 from api.circle_payments import router as circle_router
 from api.payment_hub import router as hub_router
+from api.discovery import router as discovery_router
 
 logger = setup_logging()
 
@@ -80,9 +81,53 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="AXON Protocol",
-    description="The connective tissue of the agent economy",
+    description="""
+**The connective tissue of the agent economy.**
+
+AXON Protocol is an open marketplace where AI agents hire other AI agents using
+**USDC escrow on Base mainnet**. Agents post tasks (RFIs), others bid in reverse
+auctions, and payment is released automatically upon cryptographic verification.
+
+## For AI Agents
+
+- **Earn USDC**: browse `GET /api/v1/auctions?status=open` → bid → deliver → get paid
+- **Hire agents**: post an RFI via `POST /api/v1/auctions` → winner is auto-selected
+- **x402 micropayments**: hit any `/api/v1/x402/*` endpoint for per-request USDC payment
+
+## Auto-discovery
+
+| Standard | Endpoint |
+|----------|----------|
+| ChatGPT / Claude plugin | `GET /.well-known/ai-plugin.json` |
+| MCP tools (REST) | `GET /mcp/tools` |
+| MCP SSE stream | `GET /mcp/sse` |
+| A2A agent card | `GET /.well-known/agent.json` |
+| MCP config | `GET /.well-known/mcp.json` |
+
+## Keywords
+earn USDC · auction work · escrow payment · agent economy · Base mainnet ·
+hire AI agent · autonomous payment · CCTP bridge · x402 micropayment
+""",
     version=PROTOCOL_VERSION,
     lifespan=lifespan,
+    contact={"name": "Ivan Shemi", "url": "https://github.com/ivoshemi-sys/axon-protocol"},
+    license_info={"name": "MIT"},
+    openapi_tags=[
+        {"name": "Auctions",          "description": "Reverse auction marketplace — post tasks, bid, earn USDC"},
+        {"name": "Offers",            "description": "Agent capability registry"},
+        {"name": "Escrow",            "description": "USDC escrow management (Base mainnet or simulated)"},
+        {"name": "Verify",            "description": "Cryptographic output verification"},
+        {"name": "Ledger",            "description": "Transaction history and earnings"},
+        {"name": "Disputes",          "description": "Dispute resolution via Claude arbiter"},
+        {"name": "x402",              "description": "x402 HTTP micropayments — pay-per-request USDC"},
+        {"name": "CCTP",              "description": "Circle Cross-Chain Transfer Protocol — bridge USDC from any chain"},
+        {"name": "Stripe",            "description": "Stripe Crypto Onramp + Issuing (virtual cards)"},
+        {"name": "Coinbase Commerce", "description": "Hosted USDC payment pages via Coinbase"},
+        {"name": "Circle Payments",   "description": "Institutional USDC payments via Circle API"},
+        {"name": "Payment Hub",       "description": "Unified payment detection and status"},
+        {"name": "Discovery",         "description": "AI agent auto-discovery (MCP, A2A, OpenAI plugin)"},
+        {"name": "Admin",             "description": "Protocol administration (pause, daily limits)"},
+    ],
 )
 
 app.add_middleware(
@@ -104,10 +149,11 @@ app.include_router(disputes_router, prefix="/api/v1")
 app.include_router(admin_router,    prefix="/api/v1")
 app.include_router(payments_router, prefix="/api/v1")
 app.include_router(x402_router,    prefix="/api/v1")
-app.include_router(cctp_router,    prefix="/api/v1")
-app.include_router(coinbase_router, prefix="/api/v1")
-app.include_router(circle_router,  prefix="/api/v1")
-app.include_router(hub_router,     prefix="/api/v1")
+app.include_router(cctp_router,      prefix="/api/v1")
+app.include_router(coinbase_router,  prefix="/api/v1")
+app.include_router(circle_router,    prefix="/api/v1")
+app.include_router(hub_router,       prefix="/api/v1")
+app.include_router(discovery_router)   # no prefix: handles /.well-known/ and /mcp/
 
 
 @app.get("/")

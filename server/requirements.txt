@@ -16,3 +16,6 @@ py-solc-x==2.0.4
 anthropic>=0.40.0
 # Stripe payments
 stripe>=8.0.0
+# MCP (Model Context Protocol) — for Claude Desktop / Cursor integration
+# Optional: server starts without it, but /mcp/sse and stdio mode require it
+mcp>=1.0.0
