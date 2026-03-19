@@ -20,6 +20,10 @@ from api.disputes import router as disputes_router
 from api.admin import router as admin_router
 from api.payments import router as payments_router
 from api.x402_demo import router as x402_router
+from api.cctp import router as cctp_router
+from api.coinbase_commerce import router as coinbase_router
+from api.circle_payments import router as circle_router
+from api.payment_hub import router as hub_router
 
 logger = setup_logging()
 
@@ -46,6 +50,10 @@ async def lifespan(app: FastAPI):
     # Auto-release background job
     from core.auto_release import auto_release_loop
     _auto_release_task = asyncio.create_task(auto_release_loop())
+
+    # CCTP cross-chain transfer polling
+    from core.cctp_client import cctp_poll_loop
+    asyncio.create_task(cctp_poll_loop(interval=30))
 
     db_backend  = "PostgreSQL" if USE_POSTGRES else "SQLite"
     chain_mode  = "Base mainnet" if BLOCKCHAIN_ENABLED else "simulated"
@@ -96,6 +104,10 @@ app.include_router(disputes_router, prefix="/api/v1")
 app.include_router(admin_router,    prefix="/api/v1")
 app.include_router(payments_router, prefix="/api/v1")
 app.include_router(x402_router,    prefix="/api/v1")
+app.include_router(cctp_router,    prefix="/api/v1")
+app.include_router(coinbase_router, prefix="/api/v1")
+app.include_router(circle_router,  prefix="/api/v1")
+app.include_router(hub_router,     prefix="/api/v1")
 
 
 @app.get("/")

@@ -358,6 +358,52 @@ CREATE TABLE IF NOT EXISTS stripe_cards (
     status TEXT DEFAULT 'active',      -- active, inactive, canceled
     spending_limit_usd REAL DEFAULT 100.0,
     created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS cctp_transfers (
+    id TEXT PRIMARY KEY,               -- axon_cctp_xxx
+    source_chain TEXT NOT NULL,        -- ethereum, arbitrum, avalanche, polygon, solana
+    source_tx_hash TEXT,               -- burn tx on source chain
+    message_hash TEXT UNIQUE,          -- keccak256 of message bytes
+    message_bytes TEXT,                -- hex-encoded message from MessageSent event
+    attestation TEXT,                  -- Circle Iris attestation (hex)
+    destination_tx_hash TEXT,          -- receiveMessage tx on Base
+    amount_usdc REAL NOT NULL,
+    recipient TEXT NOT NULL,           -- Base wallet receiving USDC
+    status TEXT DEFAULT 'pending',     -- pending, attesting, completing, completed, failed, awaiting_message
+    auction_id TEXT,
+    agent_id TEXT,
+    created_at TEXT NOT NULL,
+    completed_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS coinbase_charges (
+    id TEXT PRIMARY KEY,               -- axon_cb_xxx
+    coinbase_charge_id TEXT UNIQUE,    -- Coinbase internal UUID
+    charge_code TEXT UNIQUE,           -- short code (e.g. AXYZ1234)
+    hosted_url TEXT,
+    amount_usdc REAL NOT NULL,
+    description TEXT,
+    status TEXT DEFAULT 'pending',     -- pending, completed, expired, failed, unresolved
+    payment_network TEXT,              -- detected source network on completion
+    auction_id TEXT,
+    agent_id TEXT,
+    created_at TEXT NOT NULL,
+    completed_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS circle_payments (
+    id TEXT PRIMARY KEY,               -- axon_circle_xxx
+    circle_intent_id TEXT,             -- Circle payment intent ID
+    circle_payment_id TEXT,            -- Circle incoming payment ID
+    amount_usdc REAL NOT NULL,
+    description TEXT,
+    source_chain TEXT,
+    status TEXT DEFAULT 'pending',     -- pending, paid, failed, canceled
+    auction_id TEXT,
+    agent_id TEXT,
+    created_at TEXT NOT NULL,
+    completed_at TEXT
 )
 """
 

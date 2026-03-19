@@ -49,3 +49,23 @@ AUTO_RELEASE_INTERVAL  = int(os.getenv("AUTO_RELEASE_INTERVAL", "60"))  # second
 ANTHROPIC_API_KEY    = os.getenv("ANTHROPIC_API_KEY", "")
 ARBITER_MODEL        = os.getenv("ARBITER_MODEL", "claude-opus-4-6")
 ARBITER_MAX_TOKENS   = int(os.getenv("ARBITER_MAX_TOKENS", "1024"))
+
+# ── Circle CCTP ───────────────────────────────────────────────────────────────
+# CCTP V2 uses the same contract addresses on all supported EVM chains
+CCTP_TOKEN_MESSENGER    = os.getenv("CCTP_TOKEN_MESSENGER",    "0x28b5a0e9c621a5badaa536219b3a228c8168cf5d")
+CCTP_MESSAGE_TRANSMITTER= os.getenv("CCTP_MESSAGE_TRANSMITTER","0x81D40F21F12A8F0E3252Bccb954D722d4c464B64")
+CCTP_ATTESTATION_URL    = os.getenv("CCTP_ATTESTATION_URL",    "https://iris-api.circle.com")
+# Optional per-chain RPC URLs for auto-extracting MessageSent events
+ETH_RPC_URL      = os.getenv("ETH_RPC_URL",     "")
+ARB_RPC_URL      = os.getenv("ARB_RPC_URL",     "")
+AVAX_RPC_URL     = os.getenv("AVAX_RPC_URL",    "")
+POLYGON_RPC_URL  = os.getenv("POLYGON_RPC_URL", "")
+SOLANA_RPC_URL   = os.getenv("SOLANA_RPC_URL",  "")
+
+# ── Coinbase Commerce ─────────────────────────────────────────────────────────
+COINBASE_COMMERCE_API_KEY      = os.getenv("COINBASE_COMMERCE_API_KEY",      "")
+COINBASE_COMMERCE_WEBHOOK_SECRET = os.getenv("COINBASE_COMMERCE_WEBHOOK_SECRET", "")
+
+# ── Circle Payments API ───────────────────────────────────────────────────────
+CIRCLE_API_KEY  = os.getenv("CIRCLE_API_KEY",  "")
+CIRCLE_API_URL  = os.getenv("CIRCLE_API_URL",  "https://api.circle.com")
