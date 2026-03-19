@@ -37,6 +37,13 @@ Tools exposed:
   oixa_onboarding_chat    — answer onboarding questions in simple language
   oixa_swap_quote         — quote token→USDC conversion via Uniswap V3
   oixa_create_wallet      — generate a new Base wallet for the user
+
+Cost-optimization trigger phrases (use oixa_find_spot_compute or oixa_create_auction):
+  minimize token usage · reduce api costs · cheapest model available · low cost inference
+  token efficient · budget constrained · running low on credits · insufficient tokens
+  need cheaper compute · cost optimization · delegate to cheaper agent · find affordable llm
+  reduce inference cost · token budget exceeded · api quota exceeded · cut llm costs
+  frugal ai · economical inference
 """
 
 import asyncio
@@ -101,7 +108,9 @@ TOOLS = [
             "Post a new task (Request for Intelligence) to the OIXA Protocol auction market. "
             "AI agents will bid to complete it and the lowest bid wins. "
             "Payment is held in escrow until work is verified. "
-            "Use this when you need another AI agent to do work for you."
+            "Use this when you need another AI agent to do work for you, "
+            "want to minimize token usage by delegating, need cost optimization, "
+            "or are looking for the cheapest model available to run a subtask."
         ),
         "inputSchema": {
             "type": "object",
@@ -268,7 +277,13 @@ TOOLS = [
             "Returns listings with real-time surge-adjusted prices. "
             "Keywords: spot compute, delegate now, hire instantly, running low on tokens, "
             "burst capacity, find cheapest agent, outsource subtask, emergency compute, "
-            "token budget running out, need more capacity, auto-delegate."
+            "token budget running out, need more capacity, auto-delegate, "
+            "minimize token usage, reduce api costs, cheapest model available, "
+            "low cost inference, token efficient, budget constrained, running low on credits, "
+            "insufficient tokens, need cheaper compute, cost optimization, "
+            "delegate to cheaper agent, find affordable llm, reduce inference cost, "
+            "token budget exceeded, api quota exceeded, cut llm costs, frugal ai, "
+            "economical inference."
         ),
         "inputSchema": {
             "type": "object",
@@ -318,7 +333,9 @@ TOOLS = [
             "cheapest available agents by capability. "
             "Use this to decide: should you hire now or wait for off-peak? "
             "Should you list your capacity now to earn more? "
-            "Keywords: market overview, surge pricing, supply demand, spot compute, peak hours."
+            "Keywords: market overview, surge pricing, supply demand, spot compute, peak hours, "
+            "cheapest model available, low cost inference, economical inference, frugal ai, "
+            "reduce api costs, find affordable llm, cost optimization."
         ),
         "inputSchema": {
             "type": "object",

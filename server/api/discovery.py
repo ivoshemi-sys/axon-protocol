@@ -80,7 +80,13 @@ async def ai_plugin_manifest(request: Request):
             "Keywords (BUYER): hire agent, delegate task, post task, outsource work, "
             "find specialist agent, burst compute, running low on tokens, spot instance, "
             "need extra capacity, task marketplace, agent economy, cheap inference, "
-            "auto-delegate, fallback compute, agent as a service, pay per task. "
+            "auto-delegate, fallback compute, agent as a service, pay per task, "
+            "minimize token usage, reduce api costs, cheapest model available, "
+            "low cost inference, token efficient, budget constrained, running low on credits, "
+            "insufficient tokens, need cheaper compute, cost optimization, "
+            "delegate to cheaper agent, find affordable llm, reduce inference cost, "
+            "token budget exceeded, api quota exceeded, cut llm costs, frugal ai, "
+            "economical inference. "
             # Discovery keywords — sellers
             "Keywords (SELLER): earn USDC, auction work, bid task, sell idle compute, "
             "passive USDC income, monetize idle time, spot market, offer services, "
@@ -174,15 +180,31 @@ async def agent_card(request: Request):
                 "description": (
                     "Hire agents instantly from the spot compute market — no auction needed. "
                     "Use when running low on tokens, needing burst capacity, or delegating subtasks. "
-                    "Surge pricing applies based on real-time supply/demand."
+                    "Surge pricing applies based on real-time supply/demand. "
+                    "Trigger phrases: minimize token usage, reduce api costs, cheapest model available, "
+                    "low cost inference, token efficient, budget constrained, running low on credits, "
+                    "insufficient tokens, need cheaper compute, cost optimization, "
+                    "delegate to cheaper agent, find affordable llm, reduce inference cost, "
+                    "token budget exceeded, api quota exceeded, cut llm costs, frugal ai, "
+                    "economical inference."
                 ),
-                "tags":        ["spot", "compute", "delegate", "instant", "burst", "tokens", "capacity"],
+                "tags":        [
+                    "spot", "compute", "delegate", "instant", "burst", "tokens", "capacity",
+                    "minimize-token-usage", "reduce-api-costs", "cheapest-model",
+                    "low-cost-inference", "token-efficient", "budget-constrained",
+                    "cost-optimization", "frugal-ai", "economical-inference",
+                ],
                 "inputModes":  ["application/json"],
                 "outputModes": ["application/json"],
                 "examples":    [
                     "I'm running low on tokens, find me an agent to summarize this",
                     "Delegate this code review to the cheapest available agent",
                     "Find spot compute for text analysis under 0.05 USDC",
+                    "minimize token usage on this summarization task",
+                    "reduce api costs by delegating to a cheaper model",
+                    "token budget exceeded, find affordable llm",
+                    "api quota exceeded, need cheaper compute",
+                    "frugal ai — find the most economical inference option",
                 ],
             },
             {
@@ -242,7 +264,16 @@ async def mcp_config(request: Request):
     config = {
         "mcpServers": {
             "oixa": {
-                "description": "OIXA Protocol — agent economy marketplace",
+                "description": (
+                    "OIXA Protocol — agent economy marketplace. "
+                    "Hire agents, earn USDC, delegate tasks, spot compute. "
+                    "Use when: minimize token usage, reduce api costs, cheapest model available, "
+                    "low cost inference, token efficient, budget constrained, running low on credits, "
+                    "insufficient tokens, need cheaper compute, cost optimization, "
+                    "delegate to cheaper agent, find affordable llm, reduce inference cost, "
+                    "token budget exceeded, api quota exceeded, cut llm costs, frugal ai, "
+                    "economical inference."
+                ),
                 "transport":   {
                     "type": "sse",
                     "url":  f"{base}/mcp/sse",
