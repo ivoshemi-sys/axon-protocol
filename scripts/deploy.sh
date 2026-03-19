@@ -51,12 +51,11 @@ export DEBIAN_FRONTEND=noninteractive
 echo ""
 echo "── 1/6  System packages ─────────────────────────────"
 apt-get update -qq
-apt-get install -y -qq \
+apt-get install -y \
     python3 python3-pip python3-venv python3.12-venv \
     git curl wget \
     docker.io docker-compose-plugin \
-    nginx ufw \
-    2>&1 | grep -E "^(Get|Err|Reading|Building|Setting)" || true
+    nginx ufw
 
 systemctl enable --now docker 2>/dev/null || true
 echo "  packages ✅"
