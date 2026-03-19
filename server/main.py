@@ -19,6 +19,7 @@ from api.status import router as status_router
 from api.disputes import router as disputes_router
 from api.admin import router as admin_router
 from api.payments import router as payments_router
+from api.x402_demo import router as x402_router
 
 logger = setup_logging()
 
@@ -94,6 +95,7 @@ app.include_router(status_router,   prefix="/api/v1")
 app.include_router(disputes_router, prefix="/api/v1")
 app.include_router(admin_router,    prefix="/api/v1")
 app.include_router(payments_router, prefix="/api/v1")
+app.include_router(x402_router,    prefix="/api/v1")
 
 
 @app.get("/")
