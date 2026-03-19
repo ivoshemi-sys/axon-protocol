@@ -33,6 +33,13 @@ SAFE_ADDRESS              = os.getenv("SAFE_ADDRESS", "")
 # ── Daily spending limit ─────────────────────────────────────────────────────
 DAILY_LIMIT_USD = float(os.getenv("DAILY_LIMIT_USD", "50.0"))
 
+# ── Stripe ───────────────────────────────────────────────────────────────────
+STRIPE_SECRET_KEY             = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_PUBLISHABLE_KEY        = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+STRIPE_WEBHOOK_SECRET         = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_ISSUING_WEBHOOK_SECRET = os.getenv("STRIPE_ISSUING_WEBHOOK_SECRET", "")
+STRIPE_ENABLED = bool(STRIPE_SECRET_KEY)
+
 # ── Dispute system ───────────────────────────────────────────────────────────
 DISPUTE_WINDOW_MINUTES = int(os.getenv("DISPUTE_WINDOW_MINUTES", "10"))
 DISPUTE_FEE_RATE       = float(os.getenv("DISPUTE_FEE_RATE", "0.10"))   # 10% of tx value

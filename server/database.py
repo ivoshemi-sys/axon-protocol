@@ -322,6 +322,42 @@ CREATE TABLE IF NOT EXISTS daily_spending (
     auction_id TEXT,
     description TEXT,
     created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS stripe_onramp_sessions (
+    id TEXT PRIMARY KEY,               -- axon_session_xxx
+    stripe_session_id TEXT UNIQUE,     -- cos_xxx from Stripe
+    client_secret TEXT,
+    wallet_address TEXT NOT NULL,
+    amount_usd REAL NOT NULL,
+    auction_id TEXT,
+    agent_id TEXT,
+    status TEXT DEFAULT 'pending',     -- pending, fulfillment_complete, error
+    created_at TEXT NOT NULL,
+    completed_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS stripe_cardholders (
+    id TEXT PRIMARY KEY,               -- axon_ch_xxx
+    stripe_cardholder_id TEXT UNIQUE,  -- ich_xxx from Stripe
+    agent_id TEXT NOT NULL,
+    agent_name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    status TEXT DEFAULT 'active',      -- active, inactive
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS stripe_cards (
+    id TEXT PRIMARY KEY,               -- axon_card_xxx
+    stripe_card_id TEXT UNIQUE,        -- ic_xxx from Stripe
+    cardholder_id TEXT NOT NULL,       -- axon_ch_xxx
+    agent_id TEXT NOT NULL,
+    last4 TEXT,
+    exp_month INTEGER,
+    exp_year INTEGER,
+    status TEXT DEFAULT 'active',      -- active, inactive, canceled
+    spending_limit_usd REAL DEFAULT 100.0,
+    created_at TEXT NOT NULL
 )
 """
 
