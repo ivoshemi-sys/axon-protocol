@@ -52,7 +52,7 @@ echo ""
 echo "── 1/6  System packages ─────────────────────────────"
 apt-get update -qq
 apt-get install -y -qq \
-    python3 python3-pip python3-venv \
+    python3 python3-pip python3-venv python3.12-venv \
     git curl wget \
     docker.io docker-compose-plugin \
     nginx ufw \
