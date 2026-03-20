@@ -117,6 +117,15 @@ systemctl restart ${SERVICE_NAME}
 echo "  systemd ✅"
 
 echo ""
+echo "── 5b/6  nginx reverse proxy ─────────────────────────"
+cp $DEPLOY_DIR/nginx/oixa.conf /etc/nginx/sites-available/oixa
+# Remove default site if still present
+rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+ln -sf /etc/nginx/sites-available/oixa /etc/nginx/sites-enabled/oixa
+nginx -t && systemctl restart nginx && systemctl enable nginx
+echo "  nginx ✅  (proxying :80 → :8000)"
+
+echo ""
 echo "── 6/6  Firewall ─────────────────────────────────────"
 ufw --force reset > /dev/null 2>&1
 ufw default deny incoming > /dev/null 2>&1
@@ -124,7 +133,7 @@ ufw default allow outgoing > /dev/null 2>&1
 ufw allow 22/tcp  > /dev/null 2>&1   # SSH
 ufw allow 80/tcp  > /dev/null 2>&1   # HTTP
 ufw allow 443/tcp > /dev/null 2>&1   # HTTPS
-ufw allow 8000/tcp > /dev/null 2>&1  # OIXA API
+ufw allow 8000/tcp > /dev/null 2>&1  # OIXA API (direct, no nginx)
 ufw --force enable > /dev/null 2>&1
 echo "  firewall ✅  (22, 80, 443, 8000 open)"
 
@@ -150,9 +159,11 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo " ✅  Deploy complete"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo " API:   http://$SERVER_IP:8000"
-echo " Docs:  http://$SERVER_IP:8000/docs"
-echo " Health: http://$SERVER_IP:8000/health"
+echo " API (nginx):  http://$SERVER_IP"
+echo " API (direct): http://$SERVER_IP:8000"
+echo " Docs:         http://$SERVER_IP/docs"
+echo " Dashboard:    http://$SERVER_IP/dashboard"
+echo " Health:       http://$SERVER_IP/health"
 echo ""
 echo " Comandos útiles:"
 echo "   ssh $SSH_USER@$SERVER_IP 'systemctl status oixa-protocol'"
