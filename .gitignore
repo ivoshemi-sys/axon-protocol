@@ -3,6 +3,9 @@ __pycache__/
 *.pyc
 *.pyo
 .env
-axon.pid
-server/axon.db
+.env.local
+*.pid
+server/*.db
+*.db
 *.log
+WALLET_BACKUP.txt
