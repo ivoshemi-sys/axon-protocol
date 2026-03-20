@@ -67,6 +67,14 @@ async def process_bid(auction_id: str, bidder_id: str, bidder_name: str, amount:
     await db.commit()
 
     logger.info(f"Bid accepted | auction={auction_id} | bidder={bidder_id} | amount={amount} | stake={stake_amount:.4f}")
+
+    # Telegram: alert only if this is the new best bid (avoids spam on many bids)
+    try:
+        from core.telegram_notifier import notify_bid_placed
+        asyncio.create_task(notify_bid_placed(auction_id, bidder_id, amount, is_winning=True))
+    except Exception:
+        pass
+
     return {
         "accepted":       True,
         "bid_id":         bid_id,
@@ -169,8 +177,9 @@ async def close_auction(auction_id: str) -> dict:
         except Exception as e:
             logger.error(f"Blockchain escrow creation error: {e}")
 
-        from core.telegram_notifier import notify_escrow_created
+        from core.telegram_notifier import notify_escrow_created, notify_auction_closed
         await notify_escrow_created(auction_id, winning_bid, winner_id)
+        await notify_auction_closed(auction_id, winner_id, winning_bid)
 
         from core.openclaw import openclaw_client
         await openclaw_client.broadcast(

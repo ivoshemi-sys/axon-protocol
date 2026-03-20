@@ -54,6 +54,12 @@ async def create_auction(rfi: RFI):
 
     asyncio.create_task(run_auction_timer(auction_id, duration))
 
+    try:
+        from core.telegram_notifier import notify_auction_created
+        asyncio.create_task(notify_auction_created(auction_id, rfi.rfi_description, rfi.max_budget, rfi.requester_id))
+    except Exception:
+        pass
+
     return _response(
         {
             "id": auction_id,
