@@ -12,7 +12,7 @@ TELEGRAM_OWNER_ID = int(os.getenv("TELEGRAM_OWNER_ID", "0") or "0")
 DB_PATH = os.getenv("DB_PATH", "./oixa.db")
 DATABASE_URL = os.getenv("DATABASE_URL", "")  # postgresql://user:pass@host:5432/db
 COMMISSION_RATE = float(os.getenv("COMMISSION_RATE", "0.05"))
-MAX_REQUESTS_PER_MINUTE = int(os.getenv("MAX_REQUESTS_PER_MINUTE", "50"))
+MAX_REQUESTS_PER_MINUTE = int(os.getenv("MAX_REQUESTS_PER_MINUTE", "0"))  # 0 = unlimited
 STAKE_PERCENTAGE = float(os.getenv("STAKE_PERCENTAGE", "0.20"))
 SIMULATED_YIELD_APY = 0.04
 PROTOCOL_WALLET = os.getenv("PROTOCOL_WALLET", "")

@@ -1,8 +1,11 @@
 import asyncio
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from core.logger import setup_logging
 from database import init_db, get_db, USE_POSTGRES
@@ -58,6 +61,14 @@ async def lifespan(app: FastAPI):
     # CCTP cross-chain transfer polling
     from core.cctp_client import cctp_poll_loop
     asyncio.create_task(cctp_poll_loop(interval=30))
+
+    # Commission sweep every 6 hours
+    from core.commission_sweep import commission_sweep_loop
+    asyncio.create_task(commission_sweep_loop())
+
+    # Daily database backup
+    from core.backup import backup_loop
+    asyncio.create_task(backup_loop())
 
     db_backend  = "PostgreSQL" if USE_POSTGRES else "SQLite"
     chain_mode  = "Base mainnet" if BLOCKCHAIN_ENABLED else "simulated"
@@ -166,6 +177,19 @@ app.include_router(spot_router,          prefix="/api/v1")
 app.include_router(a2a_router)           # no prefix: handles /a2a/* and A2A protocol
 app.include_router(onboarding_router,    prefix="/api/v1")
 app.include_router(discovery_router)   # no prefix: handles /.well-known/ and /mcp/
+
+
+_static_dir = Path(__file__).parent / "static"
+if _static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+
+    @app.get("/dashboard", include_in_schema=False)
+    async def dashboard():
+        return FileResponse(str(_static_dir / "dashboard.html"))
+
+    @app.get("/landing", include_in_schema=False)
+    async def landing():
+        return FileResponse(str(_static_dir / "index.html"))
 
 
 @app.get("/")

@@ -102,3 +102,54 @@ async def notify_server_start(mode: str) -> None:
         f"🚀 <b>OIXA Protocol started</b>\n"
         f"Mode: <b>{mode}</b>"
     )
+
+
+async def notify_auction_created(auction_id: str, description: str, budget: float, requester_id: str) -> None:
+    short_desc = description[:80] + "…" if len(description) > 80 else description
+    await send_alert(
+        f"📋 <b>New auction</b>\n"
+        f"ID: <code>{auction_id}</code>\n"
+        f"Task: {short_desc}\n"
+        f"Budget: <b>${budget:.4f} USDC</b>\n"
+        f"By: <code>{requester_id}</code>"
+    )
+
+
+async def notify_bid_placed(auction_id: str, bidder_id: str, amount: float, is_winning: bool) -> None:
+    emoji = "🏆" if is_winning else "📥"
+    status = "new best" if is_winning else "bid placed"
+    await send_alert(
+        f"{emoji} <b>Bid {status}</b>\n"
+        f"Auction: <code>{auction_id}</code>\n"
+        f"From: <code>{bidder_id}</code>\n"
+        f"Amount: <b>${amount:.4f} USDC</b>"
+    )
+
+
+async def notify_auction_closed(auction_id: str, winner_id: str, winning_bid: float) -> None:
+    await send_alert(
+        f"🔒 <b>Auction closed</b>\n"
+        f"Auction: <code>{auction_id}</code>\n"
+        f"Winner: <code>{winner_id}</code>\n"
+        f"Winning bid: <b>${winning_bid:.4f} USDC</b>"
+    )
+
+
+async def notify_transaction(tx_type: str, from_agent: str, to_agent: str, amount: float, auction_id: str = "") -> None:
+    icons = {
+        "payment": "💳",
+        "commission": "💰",
+        "stake": "🔐",
+        "refund": "↩️",
+        "commission_sweep": "💸",
+    }
+    emoji = icons.get(tx_type, "📊")
+    msg = (
+        f"{emoji} <b>{tx_type.replace('_', ' ').title()}</b>\n"
+        f"From: <code>{from_agent}</code>\n"
+        f"To: <code>{to_agent}</code>\n"
+        f"Amount: <b>${amount:.4f} USDC</b>"
+    )
+    if auction_id:
+        msg += f"\nAuction: <code>{auction_id}</code>"
+    await send_alert(msg)
