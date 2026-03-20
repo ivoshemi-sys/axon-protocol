@@ -12,11 +12,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY server/ .
 
-RUN mkdir -p /var/log/axon
+RUN mkdir -p /var/log/oixa /app/backups /app/logs
 
-ENV AXON_HOST=0.0.0.0
-ENV AXON_PORT=8000
-ENV DB_PATH=./axon.db
+ENV OIXA_HOST=0.0.0.0
+ENV OIXA_PORT=8000
+ENV DB_PATH=./oixa.db
+ENV LOG_DIR=/var/log/oixa
 
 EXPOSE 8000
 
