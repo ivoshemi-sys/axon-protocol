@@ -12,7 +12,7 @@ Selling point:
 Targets:
   - AgentVerse (Fetch.ai)        — hosted agent marketplace
   - Autonolas                    — on-chain service registry
-  - Google A2A registry          — GitHub PR to google-a2a/a2a-samples
+  - Google A2A registry          — GitHub PR to a2aproject/a2a-samples
   - AutoGPT marketplace          — GitHub PR to Significant-Gravitas/AutoGPT
   - LangChain Hub                — toolkit listing
   - Hugging Face Hub             — model card / space listing
@@ -402,11 +402,11 @@ class AutonolasRegistrar(Registrar):
 
 class GoogleA2ARegistrar(Registrar):
     """
-    Submit PR to google-a2a/a2a-samples adding OIXA to the registry.
+    Submit PR to a2aproject/a2a-samples adding OIXA to the registry.
     Files are already prepared in agents/registry_submissions/google-a2a/
     """
     name = "google_a2a"
-    TARGET_REPO = "google-a2a/a2a-samples"
+    TARGET_REPO = "a2aproject/a2a-samples"
 
     async def run(self) -> bool:
         log.info("[Google A2A] Attempting PR submission...")
@@ -435,7 +435,7 @@ class GoogleA2ARegistrar(Registrar):
 
                 # Fork and clone
                 res = subprocess.run(
-                    ["gh", "repo", "fork", self.TARGET_REPO, "--clone", "--remote"],
+                    ["gh", "repo", "fork", self.TARGET_REPO, "--clone"],
                     cwd=tmpdir, capture_output=True, text=True, timeout=120,
                 )
                 if res.returncode != 0:
@@ -510,7 +510,7 @@ class GoogleA2ARegistrar(Registrar):
             return self.fail(f"Exception: {e}")
 
     async def _check_existing_pr(self) -> str | None:
-        """Return PR URL if OIXA PR already open in google-a2a/a2a-samples."""
+        """Return PR URL if OIXA PR already open in a2aproject/a2a-samples."""
         try:
             res = subprocess.run(
                 ["gh", "pr", "list", "--repo", self.TARGET_REPO,
@@ -607,7 +607,7 @@ class AutoGPTRegistrar(Registrar):
                 tmp = Path(tmpdir)
 
                 res = subprocess.run(
-                    ["gh", "repo", "fork", self.TARGET_REPO, "--clone", "--remote"],
+                    ["gh", "repo", "fork", self.TARGET_REPO, "--clone"],
                     cwd=tmpdir, capture_output=True, text=True, timeout=180,
                 )
 
@@ -966,7 +966,7 @@ class DirectoryScanner(Registrar):
 
     KNOWN_REGISTRIES = [
         # GitHub repos that are A2A registries / agent marketplaces
-        "google-a2a/a2a-samples",
+        "a2aproject/a2a-samples",
         "modelcontextprotocol/servers",
         "punkpeye/awesome-mcp-servers",
         "wong2/awesome-gpt-agents",
