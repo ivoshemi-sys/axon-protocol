@@ -1,0 +1,38 @@
+[Unit]
+Description=OIXA Protocol Diffusion Agent — autonomous A2A registration
+Documentation=https://github.com/ivoshemi-sys/oixa-protocol
+After=network-online.target oixa-protocol.service
+Wants=network-online.target
+# Start alongside main server but don't depend on it
+PartOf=oixa-protocol.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/oixa-protocol
+EnvironmentFile=/opt/oixa-protocol/.env
+
+# Persistent state + logs
+Environment=DIFFUSION_STATE=/opt/oixa-protocol/diffusion_state.json
+Environment=DIFFUSION_LOG=/var/log/oixa-diffusion.log
+Environment=DIFFUSION_RECHECK_HOURS=6
+Environment=DIFFUSION_SCAN_HOURS=24
+Environment=OIXA_BASE_URL=http://oixa.io
+Environment=OIXA_API_URL=http://localhost:8000
+
+ExecStart=/opt/oixa-protocol/venv/bin/python3 /opt/oixa-protocol/agents/diffusion_agent/agent.py
+
+# Restart on any failure (network glitch, API timeout, etc.)
+Restart=on-failure
+RestartSec=60
+# Don't restart more than 5 times in 10 minutes (prevents thrash on hard errors)
+StartLimitIntervalSec=600
+StartLimitBurst=5
+
+# Output → journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=oixa-diffusion
+
+[Install]
+WantedBy=multi-user.target
