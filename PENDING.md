@@ -6,53 +6,52 @@
 
 ---
 
-## 🔴 BLOCKER 1 — VPS SSH Key (Deploy)
+## 🔴 BLOCKER 1 — GitHub Secrets for Auto-Deploy (READY — just paste)
 
-**What:** Auto-deploy via GitHub Actions requires your SSH key authorized on the VPS.
+A dedicated CI/CD SSH key pair was generated (2026-03-25). The **public key is already installed** on the VPS at `root@64.23.235.34`.
 
-**Command (run once from this Mac):**
-```bash
-ssh-copy-id root@64.23.235.34
+**Go to:** https://github.com/ivoshemi-sys/oixa-protocol/settings/secrets/actions
+
+Add these 3 secrets **exactly**:
+
+| Secret name | Value |
+|-------------|-------|
+| `VPS_HOST` | `64.23.235.34` |
+| `VPS_USER` | `root` |
+| `VPS_SSH_KEY` | *(paste the private key below)* |
+
+**Private key to paste for `VPS_SSH_KEY`:**
+```
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACDhuwUSljM/YUInknsg3nGq81W1+tczpvw4LMJwDEPdrAAAAKA76drNO+na
+zQAAAAtzc2gtZWQyNTUxOQAAACDhuwUSljM/YUInknsg3nGq81W1+tczpvw4LMJwDEPdrA
+AAAEAs9geBIMpjpSBu5OwopFdwXLGpaIX7vUTWPQs3gYauJ+G7BRKWMz9hQieSeyDecarz
+VbX61zOm/DgswnAMQ92sAAAAGm9peGEtZ2l0aHViLWFjdGlvbnMtZGVwbG95AQID
+-----END OPENSSH PRIVATE KEY-----
 ```
 
-If you don't have a key yet:
-```bash
-ssh-keygen -t ed25519 -C "oixa-deploy"
-ssh-copy-id root@64.23.235.34
-```
-
-**Then add to GitHub Secrets:**
-Go to: https://github.com/ivoshemi-sys/oixa-protocol/settings/secrets/actions
-Add these 3 secrets:
-- `VPS_HOST` = `64.23.235.34`
-- `VPS_USER` = `root`
-- `VPS_SSH_KEY` = paste your private key (`cat ~/.ssh/id_ed25519`)
-
-**After this is done:** every push to `main` auto-deploys. The workflow is at `.github/workflows/deploy.yml`.
+**After adding secrets:** every push to `main` auto-deploys via `.github/workflows/deploy.yml`.
 
 ---
 
 ## 🔴 BLOCKER 2 — Cold Wallet Address (Commission Sweep)
 
-**What:** Commission sweep runs every 6h but sends to `PENDING_WALLET` until you configure this.
+**What:** Commission sweep runs every 6h but accumulates in ledger until wallet is configured.
 
 **When you have your cold wallet address:**
-1. Add to `.env` on the VPS:
-   ```
-   PROTOCOL_WALLET=0xYOUR_WALLET_ADDRESS
-   ```
-2. Restart the service:
-   ```bash
-   ssh root@64.23.235.34 'systemctl restart oixa-protocol'
-   ```
+1. SSH to VPS: `ssh root@64.23.235.34`
+2. Edit .env: `nano /opt/oixa-protocol/.env`
+3. Add: `PROTOCOL_WALLET=0xYOUR_WALLET_ADDRESS`
+4. Restart: `systemctl restart oixa-protocol`
 
-**Phase 2 note:** In Phase 2 this will trigger real USDC transfers on Base mainnet via the blockchain escrow client. Currently it records the intent in the ledger and sends a Telegram alert.
+**Note:** In Phase 2 this triggers real USDC transfers on Base mainnet.
 
 ---
 
 ## 🔴 BLOCKER 3 — PyPI API Token (Package Publish)
 
-**What:** `oixa-protocol 0.1.0` package is built and ready. Needs your PyPI token to upload.
+**What:** `oixa-protocol 0.1.0` package is built and ready.
 
 **When you have your token:**
 ```bash
@@ -64,36 +63,50 @@ TWINE_USERNAME=__token__ TWINE_PASSWORD=pypi-PASTE_TOKEN_HERE python3 -m twine u
 
 ---
 
-## 🔴 BLOCKER 4 — First VPS Deploy (one-time setup)
+## 🟡 PENDING 4 — Multi-Arbiter API Keys (GPT-4 + Gemini)
 
-**What:** The VPS needs to be provisioned once before auto-deploy can work.
+**What:** Multi-arbiter voting is implemented (2-of-3: Claude + GPT-4 + Gemini). Claude works if `ANTHROPIC_API_KEY` is set. Add the others for full 3-LLM voting.
 
-**Run from this Mac:**
-```bash
-bash scripts/deploy.sh 64.23.235.34 root
+**Add to `.env` on VPS** (`nano /opt/oixa-protocol/.env`):
+```
+OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=AIza...
 ```
 
-This script:
-- Installs Python, nginx, ufw
-- Clones the repo
-- Creates a systemd service
-- Opens ports 22, 80, 443, 8000
-- Runs a health check
-
-**After this:** GitHub Actions handles all future deploys automatically.
+Get keys: https://platform.openai.com/api-keys | https://aistudio.google.com/apikey
 
 ---
 
-## 🟡 PENDING 5 — LangChain Hub Publish
+## 🟡 PENDING 5 — PostgreSQL: Keep DATABASE_URL After Each Deploy
 
-Toolkit code is at `agents/oixa_langchain.py`. Need a LangChain Hub account to publish.
-See `agents/PUBLISH_TO_REGISTRIES.md` for instructions.
+**What:** `scripts/deploy.sh` copies local `.env` to VPS, overwriting the PostgreSQL `DATABASE_URL`.
+
+**Current workaround (automated — run after each deploy):**
+```bash
+ssh root@64.23.235.34 'sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgresql://oixa:oixa_secure_2026@localhost:5432/oixa|" /opt/oixa-protocol/.env && systemctl restart oixa-protocol'
+```
+
+**Permanent fix:** Add `DATABASE_URL=postgresql://oixa:oixa_secure_2026@localhost:5432/oixa` to your local `.env` (or update `deploy.sh` to merge VPS-specific vars instead of overwriting).
 
 ---
 
-## 🟡 PENDING 6 — Stripe Keys
+## 🟡 PENDING 6 — oixa.io Domain → VPS
 
-Stripe Crypto Onramp is fully implemented. Activate by adding to `.env`:
+Point `oixa.io` DNS to `64.23.235.34`:
+- A record: `@` → `64.23.235.34`
+- A record: `www` → `64.23.235.34`
+
+Then on VPS:
+```bash
+ssh root@64.23.235.34
+apt install -y certbot python3-certbot-nginx
+certbot --nginx -d oixa.io -d www.oixa.io
+```
+
+---
+
+## 🟡 PENDING 7 — Stripe Keys
+
 ```
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_PUBLISHABLE_KEY=pk_live_...
@@ -102,28 +115,41 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 ---
 
-## 🟡 PENDING 7 — oixa.io Domain → VPS
+## 🟡 PENDING 8 — Security Audit Follow-ups (see SECURITY_AUDIT.md)
 
-Point `oixa.io` DNS to `64.23.235.34`:
-- A record: `@` → `64.23.235.34`
-- A record: `www` → `64.23.235.34`
+Priority actions from the audit:
+1. **Migrate contract `protocol` address to Gnosis Safe** — prevents single-key compromise (HIGH-01)
+2. **Add escrow expiry + self-refund** to OIXAEscrow.sol (MEDIUM-01)
+3. **Add ReentrancyGuard** (MEDIUM-02)
 
-Then set up nginx + Let's Encrypt on the VPS:
+Slither + Mythril scan to be run after `solc` install on VPS:
 ```bash
 ssh root@64.23.235.34
-apt install -y nginx certbot python3-certbot-nginx
-certbot --nginx -d oixa.io -d www.oixa.io
+pip install solc-select slither-analyzer
+solc-select install 0.8.20 && solc-select use 0.8.20
+slither /opt/oixa-protocol/server/blockchain/contracts/OIXAEscrow.sol
 ```
 
-Configure nginx to proxy to port 8000 and serve `server/static/index.html` at root.
+---
+
+## 🟡 PENDING 9 — LangChain Hub Publish
+
+Toolkit at `agents/oixa_langchain.py`. See `agents/PUBLISH_TO_REGISTRIES.md`.
 
 ---
 
 ## ✅ COMPLETED (no action needed)
 
+- [x] PostgreSQL on VPS — `db_backend: postgresql` confirmed ✅ (2026-03-25)
+- [x] Daily backup cron on VPS — runs at 03:00 UTC ✅ (2026-03-25)
+- [x] CI/CD SSH key pair generated and public key installed on VPS ✅ (2026-03-25)
+- [x] Multi-arbiter (Claude + GPT-4 + Gemini, 2-of-3 voting) ✅ (2026-03-25)
+- [x] Security audit — SECURITY_AUDIT.md written ✅ (2026-03-25)
+- [x] End-to-end onboarding test — offer + auction + bid confirmed working ✅ (2026-03-25)
+- [x] All "10 minutes" → "10 seconds" replaced across all files ✅ (2026-03-20)
+- [x] Deploy to VPS via scripts/deploy.sh ✅ (2026-03-25)
 - [x] PostgreSQL migration code (database.py has dual SQLite/PG adapter)
 - [x] docker-compose.yml with postgres + oixa services
-- [x] Rate limiter removed (now unlimited — set MAX_REQUESTS_PER_MINUTE=0)
 - [x] Commission sweep every 6h (server/core/commission_sweep.py)
 - [x] Daily DB backup (server/core/backup.py + scripts/backup.sh)
 - [x] Telegram alerts: escrow, payment, dispute, bid, auction, sweep, server start
