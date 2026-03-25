@@ -79,7 +79,13 @@ VbX61zOm/DgswnAMQ92sAAAAGm9peGEtZ2l0aHViLWFjdGlvbnMtZGVwbG95AQID
 
 ---
 
-## 🔴 BLOCKER 3 — PyPI API Token (Package Publish)
+## ✅ PyPI Package — LIVE (completed 2026-03-25)
+
+`pip install oixa-protocol` — https://pypi.org/project/oixa-protocol/0.1.0/
+
+---
+
+## 🔴 BLOCKER 3 — PyPI API Token (Package Publish) — DONE, see above
 
 **What:** `oixa-protocol 0.1.0` package is built and ready.
 
