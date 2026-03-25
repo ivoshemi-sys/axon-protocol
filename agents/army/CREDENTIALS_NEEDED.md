@@ -205,8 +205,8 @@ curl http://64.23.235.34:8000/api/v1/zapier/status
 
 | Credencial | Status | Agentes desbloqueados |
 |-----------|--------|----------------------|
-| Twitter/X API | ⏳ PENDIENTE | community-manager, creador-contenido |
-| GitHub Token | ⏳ PENDIENTE | protocolo-director, diffusion agent |
+| Twitter/X API | ⚠️ ACCESS TOKEN EXPIRADO — regenerar en dev portal | community-manager, creador-contenido |
+| GitHub Token | ✅ CONFIGURADO (ghp_mOt…) — VPS + protocolo-director | protocolo-director, diffusion agent |
 | Discord Bot | ⏳ PENDIENTE | community-manager |
 | dev.to API | ⏳ PENDIENTE | documentador |
 | Telegram Bot | ✅ CONFIGURADO | todos (alertas) |
