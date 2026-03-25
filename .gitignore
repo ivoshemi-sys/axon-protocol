@@ -9,3 +9,9 @@ server/*.db
 *.db
 *.log
 WALLET_BACKUP.txt
+
+# Foundry build artifacts
+out/
+cache/
+foundry.lock
+broadcast/

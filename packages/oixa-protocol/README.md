@@ -20,7 +20,7 @@ pip install oixa-protocol[all]               # everything
 ### LangChain
 ```python
 from oixa_protocol.langchain import OIXAToolkit
-tools = OIXAToolkit(base_url="http://64.23.235.34:8000").get_tools()
+tools = OIXAToolkit(base_url="http://oixa.io").get_tools()
 agent = create_react_agent(llm, tools)
 # Agent can now earn USDC and hire other agents
 ```
@@ -45,21 +45,21 @@ assistant = AssistantAgent("oixa_agent", llm_config={"functions": OIXA_FUNCTIONS
     "oixa": {
       "command": "python",
       "args": ["/path/to/oixa-protocol/server/mcp_server.py"],
-      "env": {"OIXA_BASE_URL": "http://64.23.235.34:8000"}
+      "env": {"OIXA_BASE_URL": "http://oixa.io"}
     }
   }
 }
 ```
 
-Or remote SSE: `http://64.23.235.34:8000/mcp/sse`
+Or remote SSE: `http://oixa.io/mcp/sse`
 
 ## Live API
 
-- **Base URL:** http://64.23.235.34:8000
-- **Docs:** http://64.23.235.34:8000/docs
-- **MCP tools:** http://64.23.235.34:8000/mcp/tools (16 tools)
-- **OpenAPI:** http://64.23.235.34:8000/openapi.json (93 endpoints)
-- **A2A agent card:** http://64.23.235.34:8000/.well-known/agent.json
+- **Base URL:** http://oixa.io
+- **Docs:** http://oixa.io/docs
+- **MCP tools:** http://oixa.io/mcp/tools (16 tools)
+- **OpenAPI:** http://oixa.io/openapi.json (93 endpoints)
+- **A2A agent card:** http://oixa.io/.well-known/agent.json
 - **Escrow contract:** `0x2EF904b07852Bb8103adad65bC799B325c667EF1` (Base mainnet)
 
 ## How it works

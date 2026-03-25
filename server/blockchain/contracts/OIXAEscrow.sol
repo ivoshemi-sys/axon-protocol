@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity =0.8.28;
 
 /**
  * @title OIXAEscrow
@@ -9,6 +9,10 @@ pragma solidity ^0.8.20;
  *         or refunds on failure. Commission is deducted at release time.
  * @dev Deployed on Base mainnet (chainId 8453).
  *      USDC address: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+ *
+ *      Security fixes (v2):
+ *      - CEI pattern enforced in createEscrow: state written BEFORE transferFrom
+ *      - pragma pinned to =0.8.28 (avoids 3 known bugs in ^0.8.20)
  */
 
 interface IERC20 {
@@ -114,6 +118,9 @@ contract OIXAEscrow {
      * @param payee      Agent wallet that will receive net payment on success
      * @param amount     Total USDC to lock (6 decimals, e.g. 1 USDC = 1_000_000)
      * @param commission Protocol fee, must be < amount
+     *
+     * @dev CEI pattern: all state changes happen BEFORE the external transferFrom call.
+     *      This eliminates the reentrancy-no-eth finding from Slither audit (2026-03-25).
      */
     function createEscrow(
         bytes32 escrowId,
@@ -122,13 +129,13 @@ contract OIXAEscrow {
         uint256 amount,
         uint256 commission
     ) external whenNotPaused {
+        // ── Checks ───────────────────────────────────────────────────────────
         if (escrows[escrowId].createdAt != 0) revert EscrowAlreadyExists();
         if (amount == 0)              revert InvalidAmount();
         if (commission >= amount)     revert InvalidAmount();
         if (payee == address(0))      revert InvalidAmount();
 
-        if (!usdc.transferFrom(msg.sender, address(this), amount)) revert TransferFailed();
-
+        // ── Effects (write state BEFORE external call) ────────────────────────
         escrows[escrowId] = Escrow({
             payer:      msg.sender,
             payee:      payee,
@@ -140,6 +147,9 @@ contract OIXAEscrow {
         });
 
         totalLocked += amount;
+
+        // ── Interactions (external call last) ─────────────────────────────────
+        if (!usdc.transferFrom(msg.sender, address(this), amount)) revert TransferFailed();
 
         emit EscrowCreated(escrowId, auctionId, msg.sender, payee, amount, commission);
     }
@@ -154,13 +164,15 @@ contract OIXAEscrow {
         if (e.createdAt == 0)           revert EscrowNotFound();
         if (e.status != Status.Active)  revert AlreadySettled();
 
+        // Effects
         e.status = Status.Released;
         uint256 net = e.amount - e.commission;
 
-        totalLocked     -= e.amount;
-        totalReleased   += net;
+        totalLocked      -= e.amount;
+        totalReleased    += net;
         totalCommissions += e.commission;
 
+        // Interactions
         if (!usdc.transfer(e.payee, net)) revert TransferFailed();
         if (e.commission > 0) {
             if (!usdc.transfer(protocol, e.commission)) revert TransferFailed();
@@ -178,11 +190,13 @@ contract OIXAEscrow {
         if (e.createdAt == 0)           revert EscrowNotFound();
         if (e.status != Status.Active)  revert AlreadySettled();
 
+        // Effects
         e.status        = Status.Refunded;
         uint256 amount  = e.amount;
         totalLocked    -= amount;
         totalRefunded  += amount;
 
+        // Interactions
         if (!usdc.transfer(e.payer, amount)) revert TransferFailed();
 
         emit EscrowRefunded(escrowId, e.payer, amount);

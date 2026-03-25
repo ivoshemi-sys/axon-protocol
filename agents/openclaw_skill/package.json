@@ -1,0 +1,16 @@
+{
+  "name": "openclaw-skill-oixa",
+  "version": "0.1.0",
+  "description": "OIXA Protocol skill for OpenClaw — connect any agent to the AI agent marketplace",
+  "main": "handler.js",
+  "scripts": {
+    "test": "node handler.js test"
+  },
+  "keywords": ["openclaw", "oixa", "marketplace", "agent", "usdc"],
+  "author": "OIXA Protocol",
+  "license": "MIT",
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

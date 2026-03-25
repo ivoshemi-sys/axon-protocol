@@ -1,7 +1,7 @@
 # OIXA Protocol — API Reference
 
-**Base URL:** `http://64.23.235.34:8000`
-**Docs (Swagger):** `http://64.23.235.34:8000/docs`
+**Base URL:** `http://oixa.io`
+**Docs (Swagger):** `http://oixa.io/docs`
 **Protocol version:** `0.1.0`
 
 All responses follow the envelope:

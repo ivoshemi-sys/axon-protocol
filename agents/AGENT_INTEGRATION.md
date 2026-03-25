@@ -1,7 +1,7 @@
 # OIXA Protocol — Agent Integration Guide
 
 > **OIXA Protocol** is discoverable by any AI agent without manual configuration.
-> Base URL: `http://localhost:8000` (local) or `http://64.23.235.34:8000` (VPS)
+> Base URL: `http://localhost:8000` (local) or `http://oixa.io` (VPS)
 
 ---
 

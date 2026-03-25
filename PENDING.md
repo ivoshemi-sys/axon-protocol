@@ -6,6 +6,46 @@
 
 ---
 
+## 🔴 BLOCKER 0 — OIXAEscrow v2 Deploy (needs ETH for gas)
+
+**What:** Contract v2 is built and ready (CEI fix + pragma =0.8.28). Wallet has 0 ETH on Base — can't pay gas.
+
+**Wallet:** `0x51BdFbd66c49734E2399768D7a8cD95483102a00` (Base mainnet)
+**USDC:** `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+
+**Step 1 — Fund the wallet with ~0.001 ETH on Base mainnet** (bridge from L1 or buy directly on Base)
+
+**Step 2 — Run the deploy:**
+```bash
+cd /Users/Openclaw/oixa-protocol
+export PATH="$HOME/.foundry/bin:$PATH"
+source .env
+
+USDC_ADDRESS=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+PROTOCOL_ADDRESS=0x51BdFbd66c49734E2399768D7a8cD95483102a00
+
+forge script script/DeployEscrow.s.sol \
+  --rpc-url "$BASE_RPC_URL" \
+  --private-key "$PROTOCOL_PRIVATE_KEY" \
+  --env USDC_ADDRESS=$USDC_ADDRESS \
+  --env PROTOCOL_ADDRESS=$PROTOCOL_ADDRESS \
+  --broadcast \
+  --verify
+```
+
+**Step 3 — Update ESCROW_CONTRACT_ADDRESS in `.env` with the new address**
+
+**Step 4 — Update VPS:**
+```bash
+ssh root@64.23.235.34 'sed -i "s/ESCROW_CONTRACT_ADDRESS=.*/ESCROW_CONTRACT_ADDRESS=0xNEW_ADDRESS/" /opt/oixa-protocol/.env && systemctl restart oixa-protocol'
+```
+
+**Step 5 — Update SECURITY_AUDIT.md with new contract address.**
+
+**Note:** v1 contract `0x2EF904b07852Bb8103adad65bC799B325c667EF1` remains live until v2 is deployed. The CEI fix is defense-in-depth — v1 has no live exploitable path with standard USDC.
+
+---
+
 ## 🔴 BLOCKER 1 — GitHub Secrets for Auto-Deploy (READY — just paste)
 
 A dedicated CI/CD SSH key pair was generated (2026-03-25). The **public key is already installed** on the VPS at `root@64.23.235.34`.
@@ -132,7 +172,27 @@ slither /opt/oixa-protocol/server/blockchain/contracts/OIXAEscrow.sol
 
 ---
 
-## 🟡 PENDING 9 — LangChain Hub Publish
+## 🟡 PENDING 9 — Submit PRs to Google A2A and AutoGPT Registries
+
+Files are ready in `agents/registry_submissions/`. Instructions in each directory.
+
+**Google A2A:**
+- Fork `google-a2a/a2a-samples` and add `agents/oixa-protocol/agent.json`
+- See `agents/registry_submissions/google-a2a/SUBMISSION_INSTRUCTIONS.md`
+- Blocker: `oixa.io` DNS must point to VPS first
+
+**AutoGPT:**
+- Fork `Significant-Gravitas/AutoGPT` and add `oixa_autogpt.py` to blocks/
+- See `agents/registry_submissions/autogpt/SUBMISSION_INSTRUCTIONS.md`
+
+**OpenClaw Skill Registry:**
+- Skill files ready at `agents/openclaw_skill/`
+- Submit via: `openclaw skill publish agents/openclaw_skill/` (once OpenClaw registry is live)
+- Manual install: `openclaw skill install https://github.com/ivoshemi-sys/oixa-protocol/tree/main/agents/openclaw_skill`
+
+---
+
+## 🟡 PENDING 10 — LangChain Hub Publish
 
 Toolkit at `agents/oixa_langchain.py`. See `agents/PUBLISH_TO_REGISTRIES.md`.
 

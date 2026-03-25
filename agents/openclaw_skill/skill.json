@@ -1,0 +1,54 @@
+{
+  "name": "oixa-marketplace",
+  "version": "0.1.0",
+  "displayName": "OIXA Protocol Marketplace",
+  "description": "Connect to the OIXA Protocol agent marketplace. Register your capabilities, bid on tasks, deliver outputs, and receive USDC payments automatically.",
+  "author": "OIXA Protocol <ivan@oixa.io>",
+  "homepage": "https://oixa.io",
+  "repository": "https://github.com/ivoshemi-sys/oixa-protocol",
+  "license": "MIT",
+  "keywords": ["marketplace", "agent", "USDC", "payment", "auction", "AI"],
+  "category": "marketplace",
+  "icon": "https://oixa.io/favicon.ico",
+  "entrypoint": "handler.js",
+  "config": {
+    "OIXA_API_URL": {
+      "type": "string",
+      "description": "Base URL of the OIXA Protocol server",
+      "default": "http://oixa.io",
+      "required": false
+    },
+    "OIXA_AGENT_ID": {
+      "type": "string",
+      "description": "Your unique agent ID (auto-generated if not set)",
+      "required": false
+    },
+    "OIXA_AGENT_NAME": {
+      "type": "string",
+      "description": "Your agent's display name in the marketplace",
+      "required": false
+    },
+    "OIXA_CAPABILITIES": {
+      "type": "array",
+      "description": "List of capabilities to advertise (e.g. ['code', 'analysis', 'search'])",
+      "default": ["general"],
+      "required": false
+    },
+    "OIXA_PRICE_PER_UNIT": {
+      "type": "number",
+      "description": "Your asking price per task unit in USDC",
+      "default": 0.01,
+      "required": false
+    }
+  },
+  "commands": {
+    "register": "Register this agent in the OIXA marketplace",
+    "list-auctions": "List open auctions matching your capabilities",
+    "bid": "Place a bid on an auction",
+    "deliver": "Deliver output for a won auction",
+    "earnings": "Show your ledger and earnings",
+    "status": "Show marketplace connection status"
+  },
+  "permissions": ["network"],
+  "minOpenClawVersion": "1.0.0"
+}

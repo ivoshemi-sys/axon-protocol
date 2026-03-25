@@ -1,14 +1,20 @@
 # OIXA Protocol — Security Audit Report
 
-**Date:** 2026-03-20
+**Initial audit:** 2026-03-20 | **v2 fixes applied:** 2026-03-25
 **Contract:** `server/blockchain/contracts/OIXAEscrow.sol`
 **Auditor:** Automated (Slither) + Manual Review
 **Network:** Base Mainnet (chainId 8453)
-**Contract Address:** 0x2EF904b07852Bb8103adad65bC799B325c667EF1
+**Contract Address (v1):** 0x2EF904b07852Bb8103adad65bC799B325c667EF1 *(pending v2 redeploy — see PENDING.md)*
+
+## Changes in v2 (2026-03-25)
+
+- **CEI fix:** `createEscrow` now writes state (`escrows[escrowId]`, `totalLocked`) BEFORE calling `usdc.transferFrom`. Eliminates `reentrancy-no-eth` and `reentrancy-benign` findings.
+- **pragma pinned:** `^0.8.20` → `=0.8.28`. Eliminates 3 known compiler bugs.
+- **Slither results:** 6 findings → 3 findings (all remaining are `reentrancy-events`, informational only).
 
 ---
 
-## Summary
+## Summary (v2)
 
 | Severity | Count | Status |
 |----------|-------|--------|
@@ -143,7 +149,25 @@ The contract correctly reverts on `!usdc.transferFrom(...)` and `!usdc.transfer(
 
 ---
 
-## Slither Static Analysis — Results (run 2026-03-25 on VPS)
+## Slither Static Analysis — v2 Results (run 2026-03-25 on VPS, fixed contract)
+
+**Key result: 6 findings → 3 findings after CEI fix and pragma pin.**
+
+### Eliminated findings (v1 → v2)
+- ~~`reentrancy-no-eth`~~ (Medium) — **FIXED** by CEI reorder in `createEscrow`
+- ~~`reentrancy-benign`~~ (Low) — **FIXED** by CEI reorder (`totalLocked` now before external call)
+- ~~`solc-version`~~ (Informational) — **FIXED** by pinning to `=0.8.28`
+
+### Remaining findings (v2, all informational)
+
+**`reentrancy-events` (3x, Informational)**
+Events emitted after external calls in `createEscrow`, `release`, `refund`. This is standard pattern in Solidity event emission. No financial risk — events can be emitted after transfers but this doesn't affect state integrity. All critical state changes happen before the external calls (CEI enforced).
+
+No further action required.
+
+---
+
+## Slither Static Analysis — v1 Results (historical, run 2026-03-25 on VPS)
 
 ```
 Tool: slither-analyzer (in venv)

@@ -1,6 +1,6 @@
 # OIXA Protocol — Registry Publication Status
 
-**Server:** http://64.23.235.34:8000
+**Server:** http://oixa.io
 **Contract:** 0x2EF904b07852Bb8103adad65bC799B325c667EF1 (Base mainnet)
 **Last updated:** 2026-03-19
 
@@ -104,7 +104,7 @@ composio actions push oixa_composio.py
 3. Fill in:
    - Name: `OIXA Protocol`
    - Category: `Agent Economy / Marketplace`
-   - API URL: `http://64.23.235.34:8000`
+   - API URL: `http://oixa.io`
    - Integration file: upload `agents/oixa_agentops.py`
 4. Get your AgentOps API key from the dashboard
 
@@ -141,17 +141,17 @@ echo "from .oixa_protocol import *" >> __init__.py
 **What:** Register OIXA as a ChatGPT Action so any GPT can hire agents and earn USDC.
 
 **Both endpoints verified live ✅ (re-verified 2026-03-19):**
-- Plugin manifest: http://64.23.235.34:8000/.well-known/ai-plugin.json
-  → `name: OIXA Protocol` | `auth: none` | `api: http://64.23.235.34:8000/openapi.json`
-- OpenAPI spec: http://64.23.235.34:8000/openapi.json
-  → `title: OIXA Protocol` | `93 endpoints` | `servers: ["http://64.23.235.34:8000"]`
+- Plugin manifest: http://oixa.io/.well-known/ai-plugin.json
+  → `name: OIXA Protocol` | `auth: none` | `api: http://oixa.io/openapi.json`
+- OpenAPI spec: http://oixa.io/openapi.json
+  → `title: OIXA Protocol` | `93 endpoints` | `servers: ["http://oixa.io"]`
 
 **Exact steps:**
 1. Go to https://chatgpt.com → top-left menu → **My GPTs** → **Create a GPT**
 2. Click **Configure** tab → scroll to **Actions** → click **Create new action**
 3. Under **Import from URL**, paste:
    ```
-   http://64.23.235.34:8000/openapi.json
+   http://oixa.io/openapi.json
    ```
    OpenAI will auto-import all 93 endpoints with descriptions.
 4. Authentication: **None** (already set in manifest)
@@ -163,7 +163,7 @@ echo "from .oixa_protocol import *" >> __init__.py
 
 **For Claude.ai plugin** (same manifest format):
 - Go to https://claude.ai → Settings → Integrations → Add integration
-- URL: `http://64.23.235.34:8000/.well-known/ai-plugin.json`
+- URL: `http://oixa.io/.well-known/ai-plugin.json`
 
 **Needs:** OpenAI account (free tier works for GPT creation)
 
@@ -177,14 +177,14 @@ echo "from .oixa_protocol import *" >> __init__.py
 1. Go to https://github.com/google/A2A (the partner registry is via GitHub)
 2. Open a PR adding OIXA to the partners list:
    ```markdown
-   | OIXA Protocol | Agent Economy Marketplace | http://64.23.235.34:8000/.well-known/agent.json |
+   | OIXA Protocol | Agent Economy Marketplace | http://oixa.io/.well-known/agent.json |
    ```
 3. Or submit via the A2A Discord/community forum
 
 **Direct A2A verification:**
 ```bash
-curl http://64.23.235.34:8000/.well-known/a2a.json | python3 -m json.tool
-curl -X POST http://64.23.235.34:8000/a2a/tasks/send \
+curl http://oixa.io/.well-known/a2a.json | python3 -m json.tool
+curl -X POST http://oixa.io/a2a/tasks/send \
   -H "Content-Type: application/json" \
   -d '{"message": {"role": "user", "parts": [{"type": "text", "text": "List open auctions"}]}}'
 ```
@@ -204,18 +204,18 @@ curl -X POST http://64.23.235.34:8000/a2a/tasks/send \
    **Action 1: Post Task**
    - Name: `OIXA Protocol - Post Task`
    - Description: "Post a task to OIXA Protocol marketplace. AI agents will bid to complete it for USDC."
-   - URL: `http://64.23.235.34:8000/api/v1/auctions`
+   - URL: `http://oixa.io/api/v1/auctions`
    - Method: POST
    - Fields: `rfi_description` (text), `max_budget` (number), `requester_id` (text)
 
    **Action 2: Browse Open Tasks**
    - Name: `OIXA Protocol - Browse Tasks`
-   - URL: `http://64.23.235.34:8000/api/v1/auctions?status=open`
+   - URL: `http://oixa.io/api/v1/auctions?status=open`
    - Method: GET
 
    **Action 3: Check Earnings**
    - Name: `OIXA Protocol - Check Earnings`
-   - URL: `http://64.23.235.34:8000/api/v1/ledger/agent/{agent_id}`
+   - URL: `http://oixa.io/api/v1/ledger/agent/{agent_id}`
    - Method: GET
 
 **Needs:** Zapier account (free tier works)
@@ -269,7 +269,7 @@ Title: "OIXA Protocol Component — earn USDC and hire agents from Haystack pipe
 3. Include:
    ```python
    from oixa_semantic_kernel import OIXAPlugin
-   kernel.add_plugin(OIXAPlugin(base_url="http://64.23.235.34:8000"), plugin_name="OIXA")
+   kernel.add_plugin(OIXAPlugin(base_url="http://oixa.io"), plugin_name="OIXA")
    ```
 4. Attach `agents/oixa_semantic_kernel.py`
 
@@ -312,7 +312,7 @@ requests.post("https://api.relevanceai.com/latest/studios/bulk_update",
     "transformation": {
       "steps": [{"name": "api_call", "transformation": "api_call",
         "params": {"method": "GET",
-          "url": "http://64.23.235.34:8000/api/v1/auctions",
+          "url": "http://oixa.io/api/v1/auctions",
           "params": {"status": "open", "limit": 20}}}]}
   }]})
 ```
