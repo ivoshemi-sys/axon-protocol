@@ -8,6 +8,7 @@ from database import get_db
 from models.auction import RFI, BidCreate, DeliverOutput
 from core.auction_engine import calculate_auction_duration, process_bid, close_auction, run_auction_timer
 from core.verifier import verify_output
+from core import agentops_tracker
 from config import PROTOCOL_VERSION
 
 router = APIRouter(tags=["auctions"])
@@ -53,6 +54,8 @@ async def create_auction(rfi: RFI):
     await db.commit()
 
     asyncio.create_task(run_auction_timer(auction_id, duration))
+
+    agentops_tracker.track_auction_created(auction_id, rfi.rfi_description, rfi.max_budget, rfi.requester_id, duration)
 
     try:
         from core.telegram_notifier import notify_auction_created
@@ -110,6 +113,10 @@ async def get_auction(auction_id: str):
 @router.post("/auctions/{auction_id}/bid")
 async def place_bid(auction_id: str, bid: BidCreate):
     result = await process_bid(auction_id, bid.bidder_id, bid.bidder_name, bid.amount)
+    agentops_tracker.track_bid_placed(
+        auction_id, bid.bidder_id, bid.bidder_name, bid.amount,
+        result["accepted"], result.get("is_winner", False),
+    )
     if not result["accepted"]:
         return _error(result["reason"], "BID_REJECTED")
     return _response(result)
@@ -118,6 +125,10 @@ async def place_bid(auction_id: str, bid: BidCreate):
 @router.post("/auctions/{auction_id}/deliver")
 async def deliver_output(auction_id: str, delivery: DeliverOutput):
     result = await verify_output(auction_id, delivery.output, delivery.agent_id)
+    agentops_tracker.track_delivery(
+        auction_id, delivery.agent_id, result["passed"],
+        result.get("output_hash", ""), len(delivery.output),
+    )
     if not result["passed"]:
         return _error(
             result["details"].get("fail_reason", "Verification failed"),

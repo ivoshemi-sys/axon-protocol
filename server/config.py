@@ -76,3 +76,6 @@ COINBASE_COMMERCE_WEBHOOK_SECRET = os.getenv("COINBASE_COMMERCE_WEBHOOK_SECRET",
 # ── Circle Payments API ───────────────────────────────────────────────────────
 CIRCLE_API_KEY  = os.getenv("CIRCLE_API_KEY",  "")
 CIRCLE_API_URL  = os.getenv("CIRCLE_API_URL",  "https://api.circle.com")
+
+# ── AgentOps ─────────────────────────────────────────────────────────────────
+AGENTOPS_API_KEY = os.getenv("AGENTOPS_API_KEY", "")

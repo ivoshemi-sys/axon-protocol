@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from database import get_db
 from models.dispute import DisputeOpen, DisputeResolve
 from config import PROTOCOL_VERSION, DISPUTE_WINDOW_MINUTES, DISPUTE_FEE_RATE
+from core import agentops_tracker
 
 router = APIRouter(tags=["disputes"])
 
@@ -141,6 +142,8 @@ async def open_dispute(body: DisputeOpen):
 
     await db.commit()
 
+    agentops_tracker.track_dispute_opened(dispute_id, body.auction_id, body.opened_by, body.reason, fee_amount)
+
     # ── Notify Ivan ───────────────────────────────────────────────────────────
     from core.telegram_notifier import notify_dispute_opened
     asyncio.create_task(notify_dispute_opened(dispute_id, body.auction_id, body.opened_by, fee_amount))
@@ -243,6 +246,8 @@ async def resolve_dispute(dispute_id: str, body: DisputeResolve):
     from core.arbiter import _apply_verdict
     await _apply_verdict(db, dict(dispute), dict(auction), body.verdict, 0.0, now)
     await db.commit()
+
+    agentops_tracker.track_dispute_resolved(dispute_id, body.verdict, 1.0, [body.resolved_by], 0.0)
 
     return _ok(
         {

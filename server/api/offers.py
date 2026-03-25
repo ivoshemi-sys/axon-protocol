@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from database import get_db
 from models.offer import Offer, OfferCreate, OfferUpdate
+from core import agentops_tracker
 from config import PROTOCOL_VERSION
 
 router = APIRouter(tags=["offers"])
@@ -38,6 +39,7 @@ async def create_offer(offer: OfferCreate):
         (offer_id, offer.agent_id, offer.agent_name, capabilities_json, offer.price_per_unit, offer.currency, "active", offer.wallet_address, now, now),
     )
     await db.commit()
+    agentops_tracker.track_offer_registered(offer_id, offer.agent_id, offer.agent_name, offer.capabilities, offer.price_per_unit)
     return _response(
         Offer(
             id=offer_id,

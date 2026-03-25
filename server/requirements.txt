@@ -20,3 +20,5 @@ stripe>=8.0.0
 # MCP (Model Context Protocol) — for Claude Desktop / Cursor integration
 # Optional: server starts without it, but /mcp/sse and stdio mode require it
 mcp>=1.0.0
+# AgentOps — agent observability and monitoring
+agentops>=0.3.0

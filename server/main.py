@@ -11,7 +11,7 @@ from core.logger import setup_logging
 from database import init_db, get_db, USE_POSTGRES
 from core.openclaw import openclaw_client
 from core.rate_limiter import rate_limiter
-from config import BLOCKCHAIN_ENABLED, PROTOCOL_VERSION, LOG_DIR, DISPUTE_WINDOW_MINUTES
+from config import BLOCKCHAIN_ENABLED, PROTOCOL_VERSION, LOG_DIR, DISPUTE_WINDOW_MINUTES, AGENTOPS_API_KEY
 from api.offers import router as offers_router
 from api.auctions import router as auctions_router
 from api.escrow import router as escrow_router
@@ -42,6 +42,11 @@ async def lifespan(app: FastAPI):
     global _auto_release_task
 
     logger.info("OIXA Protocol starting up...")
+
+    # AgentOps — init before anything else so startup events are captured
+    from core import agentops_tracker
+    agentops_tracker.init(AGENTOPS_API_KEY)
+
     await init_db()
     logger.info("Database initialized")
 
@@ -80,6 +85,10 @@ async def lifespan(app: FastAPI):
 
     from core.telegram_notifier import notify_server_start
     await notify_server_start("Base mainnet" if BLOCKCHAIN_ENABLED else "simulated")
+
+    # AgentOps — server.started event
+    db_label = "PostgreSQL" if USE_POSTGRES else "SQLite"
+    agentops_tracker.track_server_start(db_label, BLOCKCHAIN_ENABLED, PROTOCOL_VERSION)
 
     yield
 
