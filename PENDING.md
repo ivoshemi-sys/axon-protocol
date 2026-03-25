@@ -6,43 +6,33 @@
 
 ---
 
-## 🔴 BLOCKER 0 — OIXAEscrow v2 Deploy (needs ETH for gas)
+## 🔴 BLOCKER 0 — OIXAEscrow v2 Deploy (balance not visible yet in RPCs)
 
-**What:** Contract v2 is built and ready (CEI fix + pragma =0.8.28). Wallet has 0 ETH on Base — can't pay gas.
+**Contract v2 is built.** Balance shows 0 across all Base RPCs — verify at BaseScan first.
+**Check:** https://basescan.org/address/0x51BdFbd66c49734E2399768D7a8cD95483102a00
 
-**Wallet:** `0x51BdFbd66c49734E2399768D7a8cD95483102a00` (Base mainnet)
-**USDC:** `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+**Wallet:** `0x51BdFbd66c49734E2399768D7a8cD95483102a00` (Base mainnet, chainId 8453)
+**Gas needed:** ~0.00002 ETH (~$0.05)
+**Predicted deploy address** (nonce=0): `0x7c73194cDaBDd6c92376757116a3D64F240a3720`
 
-**Step 1 — Fund the wallet with ~0.001 ETH on Base mainnet** (bridge from L1 or buy directly on Base)
-
-**Step 2 — Run the deploy:**
+**When BaseScan shows a balance, run this ONE command:**
 ```bash
-cd /Users/Openclaw/oixa-protocol
-export PATH="$HOME/.foundry/bin:$PATH"
-source .env
-
-USDC_ADDRESS=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
-PROTOCOL_ADDRESS=0x51BdFbd66c49734E2399768D7a8cD95483102a00
-
-forge script script/DeployEscrow.s.sol \
-  --rpc-url "$BASE_RPC_URL" \
-  --private-key "$PROTOCOL_PRIVATE_KEY" \
-  --env USDC_ADDRESS=$USDC_ADDRESS \
-  --env PROTOCOL_ADDRESS=$PROTOCOL_ADDRESS \
-  --broadcast \
-  --verify
+cd /Users/Openclaw/oixa-protocol && export PATH="$HOME/.foundry/bin:$PATH" && source .env && USDC_ADDRESS=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 PROTOCOL_ADDRESS=0x51BdFbd66c49734E2399768D7a8cD95483102a00 forge script script/DeployEscrow.s.sol --rpc-url "https://base.llamarpc.com" --private-key "$PROTOCOL_PRIVATE_KEY" --broadcast
 ```
 
-**Step 3 — Update ESCROW_CONTRACT_ADDRESS in `.env` with the new address**
-
-**Step 4 — Update VPS:**
+**After deploy succeeds:**
 ```bash
-ssh root@64.23.235.34 'sed -i "s/ESCROW_CONTRACT_ADDRESS=.*/ESCROW_CONTRACT_ADDRESS=0xNEW_ADDRESS/" /opt/oixa-protocol/.env && systemctl restart oixa-protocol'
+# 1. Update .env locally
+sed -i '' 's/ESCROW_CONTRACT_ADDRESS=.*/ESCROW_CONTRACT_ADDRESS=0x7c73194cDaBDd6c92376757116a3D64F240a3720/' /Users/Openclaw/oixa-protocol/.env
+
+# 2. Update VPS + restart
+ssh root@64.23.235.34 'sed -i "s/ESCROW_CONTRACT_ADDRESS=.*/ESCROW_CONTRACT_ADDRESS=0x7c73194cDaBDd6c92376757116a3D64F240a3720/" /opt/oixa-protocol/.env && systemctl restart oixa-protocol'
+
+# 3. Verify
+curl -s http://64.23.235.34:8000/health | python3 -m json.tool
 ```
 
-**Step 5 — Update SECURITY_AUDIT.md with new contract address.**
-
-**Note:** v1 contract `0x2EF904b07852Bb8103adad65bC799B325c667EF1` remains live until v2 is deployed. The CEI fix is defense-in-depth — v1 has no live exploitable path with standard USDC.
+**Note:** v1 `0x2EF904b07852Bb8103adad65bC799B325c667EF1` stays live until v2 is confirmed on-chain.
 
 ---
 
