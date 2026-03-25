@@ -143,21 +143,54 @@ The contract correctly reverts on `!usdc.transferFrom(...)` and `!usdc.transfer(
 
 ---
 
-## Slither Static Analysis
+## Slither Static Analysis — Results (run 2026-03-25 on VPS)
 
 ```
-Tool: slither-analyzer
-Target: server/blockchain/contracts/OIXAEscrow.sol
+Tool: slither-analyzer (in venv)
+solc: 0.8.20
+Target: OIXAEscrow.sol
+Contracts analyzed: 2 (OIXAEscrow + IERC20 interface)
+Results: 6 findings
 ```
 
-> **Note:** Slither requires `solc` (Solidity compiler) to be installed. Install via:
-> ```bash
-> pip3 install solc-select && solc-select install 0.8.20 && solc-select use 0.8.20
-> pip3 install slither-analyzer
-> slither server/blockchain/contracts/OIXAEscrow.sol
-> ```
->
-> Automated scan to be run after `solc` installation. Manual analysis above captures all significant findings.
+### Slither Finding 1 — reentrancy-no-eth (Medium)
+
+**Function:** `createEscrow()`
+External call `usdc.transferFrom()` at line 130 **before** state variable `escrows[escrowId]` is written (line 132-140). Cross-function reentrancy possible via `createEscrow`, `getEscrow`, `refund`, `release`.
+
+**Severity:** Medium (no-eth reentrancy — Slither classification)
+**Assessment:** Low practical risk with USDC (doesn't have reentrant callbacks). But pattern violates CEI (Checks-Effects-Interactions). The `escrows[escrowId].createdAt != 0` guard at line 125 prevents double-creation, which partially mitigates this.
+**Fix:** Move `escrows[escrowId] = ...` and `totalLocked += amount` **before** the `transferFrom` call. Pattern would become: check → effect → interact.
+
+### Slither Finding 2 — reentrancy-benign (Low)
+
+**Function:** `createEscrow()`
+`totalLocked += amount` (line 142) written after external call. Same root cause as Finding 1 but affects only a stat counter — benign.
+
+### Slither Finding 3 — reentrancy-events (Informational)
+
+Events emitted after external calls in `createEscrow`, `release`, `refund`. Standard pattern — no financial risk, but events could fire after a reentrancy-induced revert in theory.
+
+### Slither Finding 4 — solc-version (Informational)
+
+`^0.8.20` has 3 known compiler bugs:
+- `VerbatimInvalidDeduplication`
+- `FullInlinerNonExpressionSplitArgumentEvaluationOrder`
+- `MissingSideEffectsOnSelectorAccess`
+
+None of these affect this contract's specific patterns. **Recommendation:** Pin to `=0.8.28` (latest stable, all three bugs fixed).
+
+---
+
+**Updated severity table after Slither:**
+
+| Severity | Count |
+|----------|-------|
+| Critical | 0 |
+| High | 1 (centralization — Slither doesn't catch this) |
+| Medium | 3 (no expiry + no reentrancy guard + CEI violation in createEscrow) |
+| Low | 3 |
+| Informational | 6 |
 
 ---
 
