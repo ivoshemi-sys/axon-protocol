@@ -292,7 +292,7 @@ async def _run_arbiter(dispute_id: str):
     """Async task: call Claude arbiter after a brief delay to ensure DB is committed."""
     await asyncio.sleep(2)
     try:
-        from core.arbiter import arbitrate_dispute
+        from core.multi_arbiter import arbitrate_dispute
         await arbitrate_dispute(dispute_id)
     except Exception as e:
         import logging

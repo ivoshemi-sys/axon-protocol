@@ -50,6 +50,13 @@ ANTHROPIC_API_KEY    = os.getenv("ANTHROPIC_API_KEY", "")
 ARBITER_MODEL        = os.getenv("ARBITER_MODEL", "claude-opus-4-6")
 ARBITER_MAX_TOKENS   = int(os.getenv("ARBITER_MAX_TOKENS", "1024"))
 
+# ── Multi-arbiter (GPT-4 + Gemini + Claude, 2-of-3 voting) ───────────────────
+OPENAI_API_KEY       = os.getenv("OPENAI_API_KEY", "")
+OPENAI_ARBITER_MODEL = os.getenv("OPENAI_ARBITER_MODEL", "gpt-4o")
+GEMINI_API_KEY       = os.getenv("GEMINI_API_KEY", "")
+GEMINI_ARBITER_MODEL = os.getenv("GEMINI_ARBITER_MODEL", "gemini-1.5-pro")
+MULTI_ARBITER_ENABLED = os.getenv("MULTI_ARBITER_ENABLED", "true").lower() == "true"
+
 # ── Circle CCTP ───────────────────────────────────────────────────────────────
 # CCTP V2 uses the same contract addresses on all supported EVM chains
 CCTP_TOKEN_MESSENGER    = os.getenv("CCTP_TOKEN_MESSENGER",    "0x28b5a0e9c621a5badaa536219b3a228c8168cf5d")
