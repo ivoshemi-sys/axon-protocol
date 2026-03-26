@@ -32,6 +32,7 @@ from api.spot_compute import router as spot_router
 from api.a2a import router as a2a_router
 from api.onboarding import router as onboarding_router
 from api.zapier import router as zapier_router
+from api.capabilities import router as capabilities_router
 
 logger = setup_logging()
 
@@ -188,6 +189,7 @@ app.include_router(spot_router,          prefix="/api/v1")
 app.include_router(a2a_router)           # no prefix: handles /a2a/* and A2A protocol
 app.include_router(onboarding_router,    prefix="/api/v1")
 app.include_router(zapier_router,        prefix="/api/v1")
+app.include_router(capabilities_router, prefix="/api/v1")
 app.include_router(discovery_router)   # no prefix: handles /.well-known/ and /mcp/
 
 

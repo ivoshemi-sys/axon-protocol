@@ -459,6 +459,33 @@ CREATE TABLE IF NOT EXISTS onboarding_sessions (
     offer_id TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS capabilities (
+    id TEXT PRIMARY KEY,
+    agent_id TEXT NOT NULL,
+    agent_name TEXT NOT NULL,
+    capability TEXT NOT NULL,
+    input_required TEXT NOT NULL,
+    output_guaranteed TEXT NOT NULL,
+    price_usdc REAL NOT NULL,
+    examples TEXT DEFAULT '[]',
+    tags TEXT DEFAULT '[]',
+    wallet_address TEXT,
+    status TEXT DEFAULT 'active',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS reputation (
+    agent_id TEXT PRIMARY KEY,
+    agent_name TEXT NOT NULL,
+    score REAL DEFAULT 0,
+    transactions_completed INTEGER DEFAULT 0,
+    transactions_disputed INTEGER DEFAULT 0,
+    avg_response_time_ms INTEGER DEFAULT 0,
+    last_active TEXT NOT NULL,
+    created_at TEXT NOT NULL
 )
 """
 

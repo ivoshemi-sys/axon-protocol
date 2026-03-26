@@ -9,6 +9,7 @@ from models.auction import RFI, BidCreate, DeliverOutput
 from core.auction_engine import calculate_auction_duration, process_bid, close_auction, run_auction_timer
 from core.verifier import verify_output
 from core import agentops_tracker
+from api.capabilities import update_reputation_on_completion
 from config import PROTOCOL_VERSION
 
 router = APIRouter(tags=["auctions"])
@@ -134,4 +135,15 @@ async def deliver_output(auction_id: str, delivery: DeliverOutput):
             result["details"].get("fail_reason", "Verification failed"),
             "VERIFICATION_FAILED",
         )
+    # Update reputation for the winning agent
+    db = await get_db()
+    bid_row = await db.execute_fetchall(
+        "SELECT bidder_name FROM bids WHERE auction_id=? AND bidder_id=? LIMIT 1",
+        (auction_id, delivery.agent_id),
+    )
+    agent_name = bid_row[0][0] if bid_row else delivery.agent_id
+    response_time_ms = result.get("details", {}).get("response_time_ms", 0)
+    await update_reputation_on_completion(
+        delivery.agent_id, agent_name, response_time_ms=response_time_ms
+    )
     return _response(result)
